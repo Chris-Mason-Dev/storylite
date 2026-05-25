@@ -4,9 +4,11 @@ Guide for AI coding agents working in the StoryLite monorepo.
 
 ## What this repo is
 
-StoryLite is a lightweight, Vite-powered alternative to Storybook for HTML, React, Svelte, Vue, and Solid component stories. The repo is both the product source and the demo site.
+StoryLite is a lightweight, Vite-powered alternative to Storybook for HTML, React, Svelte, Vue, and
+Solid component stories. The repo is both the product source and the demo site.
 
-Published npm packages live under `@storylite/*`. User-facing docs are in root `README.md`. Human contributor docs are in `CONTRIBUTING.md`.
+Published npm packages live under `@storylite/*`. User-facing docs are in root `README.md`. Human
+contributor docs are in `CONTRIBUTING.md`.
 
 ## Requirements
 
@@ -19,16 +21,16 @@ pnpm install
 
 ## Monorepo layout
 
-| Path | Purpose |
-| --- | --- |
-| `packages/storylite` | Core CLI, managed Svelte 5 manager app, public config/types API |
-| `packages/contracts` | Shared types and renderer contracts |
-| `packages/preview-host` | Iframe bootstrap and live CSS mutation API |
-| `packages/renderer-*` | Optional framework adapters (react, svelte, vue, solid) |
-| `apps/web` | Public demo site deployed to GitHub Pages |
-| `apps/e2e` | Playwright end-to-end tests for `apps/web` |
-| `apps/storylite-html` | Internal HTML story app used in development |
-| `demos/*` | Framework-specific demo projects |
+| Path                    | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `packages/storylite`    | Core CLI, managed Svelte 5 manager app, public config/types API |
+| `packages/contracts`    | Shared types and renderer contracts                             |
+| `packages/preview-host` | Iframe bootstrap and live CSS mutation API                      |
+| `packages/renderer-*`   | Optional framework adapters (react, svelte, vue, solid)         |
+| `apps/web`              | Public demo site deployed to GitHub Pages                       |
+| `apps/e2e`              | Playwright end-to-end tests for `apps/web`                      |
+| `apps/storylite-html`   | Internal HTML story app used in development                     |
+| `demos/*`               | Framework-specific demo projects                                |
 
 Workspace filters:
 
@@ -66,7 +68,8 @@ packages/renderer-*                    # framework-specific client/static render
 
 - CLI behavior, dev/build/preview flow: `packages/storylite/bin/`
 - Manager UI, sidebar, controls, toolbar: `packages/storylite/src/lib/components/`
-- Story format, args, controls, normalization: `packages/contracts` + `packages/storylite/src/lib/storylite/`
+- Story format, args, controls, normalization: `packages/contracts` +
+  `packages/storylite/src/lib/storylite/`
 - Iframe bootstrapping / CSS injection: `packages/preview-host`
 - Framework rendering: matching `packages/renderer-*`
 - Demo site content and config: `apps/web/.storylite/` and `apps/web/src/`
@@ -137,7 +140,8 @@ Run `pnpm format` before finishing. CI runs `pnpm format:check`.
 
 The manager app uses **Svelte 5** runes (`$props`, `$state`, `$derived`).
 
-When creating or editing `.svelte` files in `packages/storylite`, use the Svelte MCP server tools for docs lookup and validation when available.
+When creating or editing `.svelte` files in `packages/storylite`, use the Svelte MCP server tools
+for docs lookup and validation when available.
 
 Typecheck the core package with:
 
@@ -153,7 +157,8 @@ StoryLite is a focused CSF-like subset, not full Storybook. Do not add or assume
 - arbitrary project callbacks in toolbar tools
 - automatic merge of the consuming project's full `vite.config.ts`
 
-Supported story features: `title`, `args`, `argTypes`, `parameters`, `render`, renderer selection, static output.
+Supported story features: `title`, `args`, `argTypes`, `parameters`, `render`, renderer selection,
+static output.
 
 Config and renderer adapter changes often require restarting `storylite dev`.
 

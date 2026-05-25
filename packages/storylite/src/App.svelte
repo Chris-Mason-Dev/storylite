@@ -66,7 +66,8 @@
   const hasProjectErrors = $derived(storyIdCollisions.length > 0)
   const shouldShowSidebar = $derived(!storyliteSettings.maximized && !isCanvasRoute)
   const shouldShowControls = $derived(
-    storyliteSettings.controlsVisible &&
+    Boolean(activeStory) &&
+      storyliteSettings.controlsVisible &&
       !storyliteSettings.maximized &&
       !isCanvasRoute &&
       !hasProjectErrors,

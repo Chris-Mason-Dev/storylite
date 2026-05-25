@@ -73,7 +73,7 @@ export async function loadManifest(root, server = null) {
   const rendererAdapters = resolveRendererAdapters(root, config.renderers ?? [])
   const storyIdResolver = typeof config.storyId === 'function' ? config.storyId : null
   const customization = await resolveStoryliteCustomization(root, config)
-  const home = await loadHome(root)
+  const home = await loadHome(root, config.home, configPath)
 
   return {
     projectRoot: root,
@@ -311,7 +311,14 @@ function resolveFile(root, file) {
   return isAbsolute(file) ? file : resolve(root, file)
 }
 
-async function loadHome(root) {
+async function loadHome(root, inlineHome, configPath = null) {
+  if (typeof inlineHome === 'string') {
+    return {
+      path: configPath ?? resolve(root, '.storylite/config.ts'),
+      ...(await parseHomeMarkdown(inlineHome, 'config-home.md')),
+    }
+  }
+
   const path = resolve(root, '.storylite/home.md')
 
   if (!existsSync(path)) {
@@ -329,6 +336,7 @@ function isProjectFile(root, file) {
   return (
     normalized.startsWith('.storylite/') ||
     normalized.includes('.stories.') ||
+    normalized.endsWith('.md') ||
     normalized.endsWith('.css') ||
     normalized.endsWith('.html') ||
     normalized.endsWith('.tsx') ||

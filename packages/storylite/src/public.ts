@@ -164,6 +164,7 @@ export type StoryLiteUiConfig = {
 export type StoryLiteConfig = {
   readonly stories: readonly string[]
   readonly css?: readonly string[]
+  readonly home?: string
   readonly vitePlugins?: StoryLiteVitePluginsConfig
   readonly setup?: string
   readonly renderers?: readonly StoryLiteRendererAdapter[]

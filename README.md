@@ -178,6 +178,7 @@ import { defineConfig } from '@storylite/storylite'
 export default defineConfig({
   stories: ['./src/**/*.stories.{ts,tsx}'],
   css: ['./src/styles.css'],
+  home: '# Component Library',
   setup: './.storylite/setup.ts',
   renderers: [],
   vitePlugins: [],
@@ -191,6 +192,7 @@ export default defineConfig({
 | ---------------------------- | ---------------------------------------------------------------------------------------------- |
 | `stories`                    | Glob patterns for story modules. Required.                                                     |
 | `css`                        | Shared CSS files injected into the preview iframe and static story pages.                      |
+| `home`                       | Inline Markdown source for the home page. Overrides `.storylite/home.md` when set.             |
 | `setup`                      | Optional module exporting `setupPreview(window)` for preview setup.                            |
 | `renderers`                  | Optional renderer adapters, such as `react()`, `svelte()`, `vue()`, or `solid()`.              |
 | `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms. |
@@ -701,6 +703,21 @@ description: Component stories
 # Component Library
 
 Use the sidebar to browse components.
+```
+
+You can also pass Markdown directly in config. This is useful when you want to load another file:
+
+```ts
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from '@storylite/storylite'
+
+const home = readFileSync(fileURLToPath(new URL('../README.md', import.meta.url)), 'utf8')
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.{ts,tsx}'],
+  home,
+})
 ```
 
 The home page is compiled with mdsvex. When present, it replaces the default initial story canvas

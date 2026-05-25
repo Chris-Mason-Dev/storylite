@@ -265,14 +265,53 @@
 
   .story-group h2 {
     margin: 0;
+  }
+
+  .story-group__toggle {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-block-size: 28px;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
     color: var(--sl-muted);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0;
+    text-align: start;
     text-transform: uppercase;
+    cursor: pointer;
   }
 
-  .story-group button,
+  .story-group__toggle:hover,
+  .story-group__toggle:focus-visible {
+    background: var(--sl-panel-subtle);
+    outline: 0;
+  }
+
+  .story-group__toggle span {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .story-group__toggle small {
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .story-group__stories {
+    display: grid;
+    gap: 6px;
+  }
+
+  .story-group button:not(.story-group__toggle),
   .toolbar button,
   .brand__menu-button,
   .inspector__header button {
@@ -283,7 +322,7 @@
     cursor: pointer;
   }
 
-  .story-group button {
+  .story-group button:not(.story-group__toggle) {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -293,21 +332,21 @@
     text-align: start;
   }
 
-  .story-group button:hover:not(.active),
+  .story-group button:not(.story-group__toggle):hover:not(.active),
   .toolbar button:hover:not(.active),
   .brand__menu-button:hover,
   .inspector__header button:hover {
     background: var(--sl-panel-subtle);
   }
 
-  .story-group button.active,
+  .story-group button:not(.story-group__toggle).active,
   .toolbar button.active {
     border-color: color-mix(in oklab, var(--sl-primary), transparent 35%);
     background: var(--sl-panel-subtle);
     color: var(--sl-primary);
   }
 
-  .story-group button span {
+  .story-group button:not(.story-group__toggle) span {
     min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;

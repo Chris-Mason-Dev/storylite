@@ -11,6 +11,8 @@
   import Monitor from '@lucide/svelte/icons/monitor'
   import Moon from '@lucide/svelte/icons/moon'
   import PaintBucket from '@lucide/svelte/icons/paint-bucket'
+  import ChevronDown from '@lucide/svelte/icons/chevron-down'
+  import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import Search from '@lucide/svelte/icons/search'
   import Settings from '@lucide/svelte/icons/settings'
   import Sun from '@lucide/svelte/icons/sun'
@@ -39,6 +41,24 @@
   }: Props = $props()
 
   let searchInput: HTMLInputElement | undefined = $state()
+  let collapsedGroups: Record<string, boolean> = $state({})
+
+  const hasSearchQuery = $derived(searchQuery.trim().length > 0)
+
+  function isGroupExpanded(title: string): boolean {
+    return hasSearchQuery || !collapsedGroups[title]
+  }
+
+  function toggleGroup(title: string): void {
+    collapsedGroups = {
+      ...collapsedGroups,
+      [title]: isGroupExpanded(title),
+    }
+  }
+
+  function groupDomId(title: string): string {
+    return `story-group-${title.replace(/[^a-zA-Z0-9_-]+/g, '-')}`
+  }
 
   function handleKeydown(event: KeyboardEvent): void {
     if (event.key !== '/' || isEditable(event.target)) {
@@ -166,18 +186,40 @@
 
     <nav class="story-tree">
       {#each groups as group (group.title)}
-        <section class="story-group" aria-labelledby={`${group.title}-heading`}>
-          <h2 id={`${group.title}-heading`}>{group.title}</h2>
-          {#each group.stories as story (`${story.importPath}:${story.exportName}`)}
+        {@const expanded = isGroupExpanded(group.title)}
+        {@const domId = groupDomId(group.title)}
+        <section class="story-group" aria-labelledby={`${domId}-heading`}>
+          <h2 id={`${domId}-heading`}>
             <button
               type="button"
-              class:active={story.id === activeStoryId}
-              onclick={() => onSelectStory(story)}
+              class="story-group__toggle"
+              aria-expanded={expanded}
+              aria-controls={`${domId}-stories`}
+              onclick={() => toggleGroup(group.title)}
             >
-              <span>{story.name}</span>
-              <small>{story.renderer}</small>
+              {#if expanded}
+                <ChevronDown size={14} aria-hidden="true" />
+              {:else}
+                <ChevronRight size={14} aria-hidden="true" />
+              {/if}
+              <span>{group.title}</span>
+              <small>{group.stories.length}</small>
             </button>
-          {/each}
+          </h2>
+          {#if expanded}
+            <div class="story-group__stories" id={`${domId}-stories`}>
+              {#each group.stories as story (`${story.importPath}:${story.exportName}`)}
+                <button
+                  type="button"
+                  class:active={story.id === activeStoryId}
+                  onclick={() => onSelectStory(story)}
+                >
+                  <span>{story.name}</span>
+                  <small>{story.renderer}</small>
+                </button>
+              {/each}
+            </div>
+          {/if}
         </section>
       {:else}
         <p class="empty story-tree__empty">No stories match.</p>

@@ -95,6 +95,31 @@ Use **StoryLite** with \`home.md\`.
     }
   })
 
+  it('prefers inline home markdown from config over .storylite/home.md', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-inline-home-'))
+    const storyliteDir = join(root, '.storylite')
+    await mkdir(storyliteDir)
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: [],
+          home: '# Inline Home\\n\\nLoaded from **config**.',
+        }`,
+      )
+      await writeFile(join(storyliteDir, 'home.md'), '# File Home')
+
+      const manifest = await loadManifest(root)
+
+      expect(manifest.home?.html).toContain('<h1>Inline Home</h1>')
+      expect(manifest.home?.html).toContain('<strong>config</strong>')
+      expect(manifest.home?.html).not.toContain('File Home')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
   it('generates base-path-safe static story page paths', () => {
     expect(storyPagePath('components-button--primary')).toBe(
       'stories/components-button--primary/index.html',
