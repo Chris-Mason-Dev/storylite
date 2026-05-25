@@ -1,0 +1,26 @@
+{
+  "name": "@storylite/demo-storylite-preact",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=4107 storylite dev",
+    "build": "storylite build",
+    "preview": "storylite preview --port 4108",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@preact/preset-vite": "^2.10.5",
+    "@storylite/renderer-preact": "workspace:*",
+    "@storylite/storylite": "workspace:*",
+    "preact": "^10.29.2",
+    "preact-render-to-string": "^6.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  }
+}

@@ -7,9 +7,9 @@
 </p>
 
 StoryLite is a lightweight, Vite-powered alternative to Storybook for building and showcasing
-component stories in HTML, React, Svelte, Vue, and Solid. It gives projects a focused story workflow
-with a managed app shell, isolated preview iframe, story controls, static output, and optional
-framework renderer adapters.
+component stories in HTML, React, Preact, Svelte, Vue, and Solid. It gives projects a focused story
+workflow with a managed app shell, isolated preview iframe, story controls, static output, and
+optional framework renderer adapters.
 
 Use it when you want story-driven component previews without the full Storybook addon platform or
 configuration surface. Start with HTML or web components, then add framework adapters only where
@@ -25,7 +25,7 @@ your project needs them.
 - Portable previews: configured project CSS is injected into the isolated preview iframe and static
   story pages.
 - Built-in renderers for `html` and `web-components`.
-- Optional adapters for React, Svelte, Vue, and Solid.
+- Optional adapters for React, Preact, Svelte, Vue, and Solid.
 - CSF-like story files with `args`, `argTypes`, controls, and per-story parameters.
 - Static build with a prerendered manager shell and one static page per story.
 - Project customization for branding, backgrounds, viewports, toolbar tools, menu links, HTML hooks,
@@ -43,6 +43,7 @@ Add a framework adapter only when you need one:
 
 ```sh
 pnpm add -D @storylite/renderer-react
+pnpm add -D @storylite/renderer-preact
 pnpm add -D @storylite/renderer-svelte
 pnpm add -D @storylite/renderer-vue
 pnpm add -D @storylite/renderer-solid
@@ -199,7 +200,7 @@ export default defineConfig({
 | `home`                       | Inline Markdown source for the home page. Overrides `.storylite/home.md` when set.                                          |
 | `publicDir`                  | Static asset directory served at `/` in dev and copied into `dist-storylite`. Defaults to `public`. Set `false` to disable. |
 | `setup`                      | Optional module exporting `setupPreview(window)` for preview setup.                                                         |
-| `renderers`                  | Optional renderer adapters, such as `react()`, `svelte()`, `vue()`, or `solid()`.                                           |
+| `renderers`                  | Optional renderer adapters, such as `react()`, `preact()`, `svelte()`, `vue()`, or `solid()`.                               |
 | `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms.                              |
 | `storyId(path, suggestedId)` | Optional story ID rewrite hook.                                                                                             |
 
@@ -342,15 +343,16 @@ export default defineConfig({
 })
 ```
 
-### Svelte, Vue, And Solid
+### Preact, Svelte, Vue, And Solid
 
 ```ts
+import preact from '@storylite/renderer-preact'
 import svelte from '@storylite/renderer-svelte'
 import vue from '@storylite/renderer-vue'
 import solid from '@storylite/renderer-solid'
 
 export default defineConfig({
-  renderers: [svelte(), vue(), solid()],
+  renderers: [preact(), svelte(), vue(), solid()],
 })
 ```
 

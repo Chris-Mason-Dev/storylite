@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+@source './components';
+
+@layer reset, tokens;
+
+@layer reset {
+  :root {
+    color-scheme: light dark;
+    font-family:
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
+    background: light-dark(#fbfffc, #101815);
+    color: light-dark(#13211b, #f3fbf7);
+  }
+
+  body {
+    margin: 0;
+  }
+}
+
+@layer tokens {
+  :root {
+    --preact-accent: oklch(58% 0.18 156);
+    --preact-accent-soft: color-mix(in oklab, var(--preact-accent), transparent 86%);
+    --preact-surface: light-dark(#ffffff, #17231d);
+    --preact-surface-alt: light-dark(#f0f7f3, #20342b);
+    --preact-border: light-dark(#d5e6dc, #355144);
+    --preact-muted: light-dark(#5f7168, #a6b9af);
+    --preact-radius: 12px;
+  }
+}

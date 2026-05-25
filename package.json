@@ -2,7 +2,7 @@
   "name": "storylite-project",
   "version": "0.0.1",
   "private": true,
-  "description": "StoryLite - Lightweight alternative to Storybook for HTML, React, Svelte, Vue, and Solid component stories.",
+  "description": "StoryLite - Lightweight alternative to Storybook for HTML, React, Preact, Svelte, Vue, and Solid component stories.",
   "homepage": "https://itsjavi.com/storylite",
   "license": "MIT",
   "repository": {
