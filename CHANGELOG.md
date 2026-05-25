@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](https://github.com/itsjavi/storylite/compare/v0.15.1...v1.0.0) (2026-05-25)
+
+### Major Changes
+
+- Rebuilt StoryLite as a managed Vite CLI with `storylite dev`, `storylite build`, and
+  `storylite preview`, replacing the previous mount-your-own React app and Vite plugin setup.
+- Expanded stories beyond React with built-in HTML and web component renderers plus optional React,
+  Svelte, Vue, and Solid adapters.
+- Added typed `.storylite/config` support for story discovery, project CSS, public assets, setup
+  modules, renderer adapters, Vite plugins, UI customization, and stable story IDs.
+- Added static builds with a prerendered manager shell, base-safe assets, and one default-args page
+  per story.
+- Documented the focused CSF-like story format, controls, story parameters, customization hooks, and
+  current caveats for the new architecture.
+
 ## [0.15.1](https://github.com/itsjavi/storylite/compare/v0.15.0...v0.15.1) (2024-03-27)
 
 ### Bug Fixes
