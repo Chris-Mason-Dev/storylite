@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte'
   import Accessibility from '@lucide/svelte/icons/accessibility'
   import Bug from '@lucide/svelte/icons/bug'
+  import Check from '@lucide/svelte/icons/check'
+  import Copy from '@lucide/svelte/icons/copy'
   import Eye from '@lucide/svelte/icons/eye'
   import ExternalLink from '@lucide/svelte/icons/external-link'
   import Expand from '@lucide/svelte/icons/expand'
@@ -27,20 +30,33 @@
   } from '../../public'
   import type { ViewportPreset } from '../storylite/app-types'
   import { storyliteSettings, storyliteZoomLevels } from '../storylite/settings.svelte'
-  import type { StoryLiteStory } from '../storylite/types'
+  import { resolveStorySource } from '../storylite/source'
+  import type { StoryArgs, StoryLiteStory } from '../storylite/types'
 
   type Props = {
     readonly viewports: readonly ViewportPreset[]
     readonly backgrounds: readonly StoryLiteBackgroundPreset[]
     readonly toolbar: readonly StoryLiteToolbarTool[]
     readonly activeStory: StoryLiteStory | undefined
+    readonly activeArgs: StoryArgs
     readonly hasHome: boolean
     readonly staticStoriesBase: string
   }
 
   const uid = $props.id()
 
-  let { viewports, backgrounds, toolbar, activeStory, hasHome, staticStoriesBase }: Props = $props()
+  let {
+    viewports,
+    backgrounds,
+    toolbar,
+    activeStory,
+    activeArgs,
+    hasHome,
+    staticStoriesBase,
+  }: Props = $props()
+  let copiedStoryId: string | null = $state(null)
+  let copyResetTimer: ReturnType<typeof setTimeout> | null = null
+
   const viewportPopoverId = `${uid}-viewport-popover`
   const backgroundPopoverId = `${uid}-background-popover`
   const zoomPopoverId = `${uid}-zoom-popover`
@@ -64,6 +80,14 @@
     Boolean(defaultViewport) && storyliteSettings.viewport !== defaultViewport,
   )
   const hasCustomZoom = $derived(storyliteSettings.zoom !== 100)
+  const sourceSnippet = $derived(activeStory ? resolveStorySource(activeStory, activeArgs) : null)
+  const didCopySource = $derived(Boolean(activeStory && copiedStoryId === activeStory.id))
+
+  onDestroy(() => {
+    if (copyResetTimer) {
+      window.clearTimeout(copyResetTimer)
+    }
+  })
 
   function viewportTitle(viewport: ViewportPreset): string {
     return viewport.icon === 'fluid' ? viewport.label : `${viewport.label} (${viewport.width})`
@@ -77,6 +101,31 @@
     storyliteSettings.customTools = {
       ...storyliteSettings.customTools,
       [toolId]: value,
+    }
+  }
+
+  async function copyStorySource(): Promise<void> {
+    if (!activeStory || !sourceSnippet) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(sourceSnippet)
+      copiedStoryId = activeStory.id
+
+      if (copyResetTimer) {
+        window.clearTimeout(copyResetTimer)
+      }
+
+      const copiedId = activeStory.id
+      copyResetTimer = window.setTimeout(() => {
+        if (copiedStoryId === copiedId) {
+          copiedStoryId = null
+        }
+        copyResetTimer = null
+      }, 1200)
+    } catch {
+      copiedStoryId = null
     }
   }
 </script>
@@ -199,6 +248,12 @@
         popovertargetaction="hide"
         onclick={() => (storyliteSettings.background = background.value)}
       >
+        <span
+          class="toolbar-dropdown__swatch"
+          style:background={background.value}
+          data-preview-theme={storyliteSettings.previewTheme}
+          aria-hidden="true"
+        ></span>
         <span>{background.label}</span>
       </button>
     {/each}
@@ -318,6 +373,22 @@
   <span class="toolbar__spacer" aria-hidden="true"></span>
 
   <div class="toolbar__group toolbar__group--segmented" aria-label="Workspace actions">
+    {#if sourceSnippet}
+      <button
+        type="button"
+        class:active={didCopySource}
+        aria-label={didCopySource ? 'Copied source snippet' : 'Copy source snippet'}
+        title={didCopySource ? 'Copied source snippet' : 'Copy source snippet'}
+        onclick={copyStorySource}
+      >
+        {#if didCopySource}
+          <Check size={16} aria-hidden="true" />
+        {:else}
+          <Copy size={16} aria-hidden="true" />
+        {/if}
+      </button>
+    {/if}
+
     <button
       type="button"
       class:active={storyliteSettings.maximized}

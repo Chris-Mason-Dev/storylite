@@ -60,6 +60,15 @@
     --sl-danger: light-dark(#b42318, #fda29b);
     --sl-shadow: 0 16px 42px light-dark(rgb(16 24 40 / 10%), rgb(0 0 0 / 28%));
     --sl-header-block-size: 56px;
+
+    /* Similar grid as defined in packages/storylite/src/lib/renderers/runtime.ts:260 */
+    --sl-grid-size: 4px;
+    --sl-grid-major-size: calc(var(--sl-grid-size) * 4);
+    --sl-grid-offset: 0px;
+    --sl-grid-line-width: 1px;
+    --sl-grid-line-color: rgb(130 130 130 / 45%);
+    --sl-grid-line-color-2: rgb(130 130 130 / 20%);
+    --sl-grid-background-color: light-dark(#f7f7f7, #111111);
   }
 }
 
@@ -615,7 +624,7 @@
 
   .toolbar .toolbar-dropdown__item {
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr) auto;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
     align-items: center;
     justify-items: start;
     box-sizing: border-box;
@@ -634,7 +643,7 @@
     text-align: start;
   }
 
-  .toolbar .toolbar-dropdown__item:not(:has(svg)) {
+  .toolbar .toolbar-dropdown__item:not(:has(svg)):not(:has(.toolbar-dropdown__swatch)) {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
@@ -642,6 +651,26 @@
     inline-size: 16px;
     block-size: 16px;
     color: currentColor;
+  }
+
+  .toolbar .toolbar-dropdown__swatch {
+    display: block;
+    box-sizing: border-box;
+    inline-size: 20px;
+    block-size: 20px;
+    border: 1px solid color-mix(in oklab, var(--sl-border), var(--sl-text) 18%);
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px light-dark(rgb(255 255 255 / 50%), rgb(255 255 255 / 10%));
+  }
+
+  .toolbar .toolbar-dropdown__swatch[data-preview-theme='light'] {
+    color-scheme: light;
+    --sl-grid-background-color: #f7f7f7;
+  }
+
+  .toolbar .toolbar-dropdown__swatch[data-preview-theme='dark'] {
+    color-scheme: dark;
+    --sl-grid-background-color: #111111;
   }
 
   .toolbar .toolbar-dropdown__item span {

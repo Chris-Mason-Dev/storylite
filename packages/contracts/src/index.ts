@@ -38,6 +38,19 @@ export type StoryRender<TArgs extends StoryArgs = StoryArgs> = (
   context: StoryContext,
 ) => StoryRenderResult
 
+export type StorySourceContext = {
+  readonly id: string
+  readonly importPath: string
+  readonly exportName: string
+  readonly title: string
+  readonly name: string
+  readonly renderer: StoryLiteRenderer
+}
+
+export type StorySourceSnippet<TArgs extends StoryArgs = StoryArgs> =
+  | string
+  | ((args: TArgs, context: StorySourceContext) => string | null | undefined)
+
 export type StoryParameters = {
   readonly renderer?: StoryLiteRenderer
   readonly css?: string | readonly string[]
@@ -51,6 +64,7 @@ export type StoryMeta<TArgs extends StoryArgs = StoryArgs> = {
   readonly args?: Partial<TArgs>
   readonly argTypes?: StoryArgTypes<TArgs>
   readonly parameters?: StoryParameters
+  readonly source?: StorySourceSnippet<TArgs>
 }
 
 export type StoryExport<TArgs extends StoryArgs = StoryArgs> = {
@@ -60,6 +74,7 @@ export type StoryExport<TArgs extends StoryArgs = StoryArgs> = {
   readonly argTypes?: StoryArgTypes<TArgs>
   readonly parameters?: StoryParameters
   readonly render?: StoryRender<TArgs>
+  readonly source?: StorySourceSnippet<TArgs>
 }
 
 export type StoryLiteStory = {
@@ -73,6 +88,7 @@ export type StoryLiteStory = {
   readonly argTypes: Record<string, StoryArgType>
   readonly parameters: StoryParameters
   readonly render?: StoryRender
+  readonly source?: StorySourceSnippet
   readonly renderer: StoryLiteRenderer
 }
 

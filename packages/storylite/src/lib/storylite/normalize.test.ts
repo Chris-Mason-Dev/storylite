@@ -34,6 +34,19 @@ describe('normalizeStoryModule', () => {
 
     expect(stories[0]?.renderer).toBe('web-components')
   })
+
+  it('uses story source before meta source', () => {
+    const metaSource = () => '<MetaButton />'
+    const storySource = () => '<StoryButton />'
+    const stories = normalizeStoryModule('../demo/button.stories.ts', {
+      default: { source: metaSource },
+      MetaOnly: { args: { label: 'Meta' } },
+      StoryOnly: { args: { label: 'Story' }, source: storySource },
+    })
+
+    expect(stories.find((story) => story.exportName === 'MetaOnly')?.source).toBe(metaSource)
+    expect(stories.find((story) => story.exportName === 'StoryOnly')?.source).toBe(storySource)
+  })
 })
 
 describe('storyId', () => {

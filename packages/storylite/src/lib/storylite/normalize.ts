@@ -64,6 +64,7 @@ export function normalizeStoryModule(
     const parameters = mergeParameters(meta.parameters, storyExport.parameters)
     const component = storyExport.component ?? meta.component
     const render = storyExport.render
+    const source = storyExport.source ?? meta.source
     const renderer = selectRenderer(parameters, component, render)
 
     stories.push({
@@ -77,6 +78,7 @@ export function normalizeStoryModule(
       argTypes,
       parameters,
       render,
+      source,
       renderer,
     })
   }

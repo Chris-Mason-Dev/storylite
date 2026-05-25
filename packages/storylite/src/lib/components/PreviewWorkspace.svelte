@@ -101,7 +101,10 @@
         ...options,
         rendererClientLoaders,
       })
-      applyIframeZoom(currentIframe, untrack(() => storyliteSettings.zoom))
+      applyIframeZoom(
+        currentIframe,
+        untrack(() => storyliteSettings.zoom),
+      )
       renderedStory.then(
         (nextMountedStory) => {
           if (token !== renderToken) {
@@ -220,6 +223,7 @@
       {viewports}
       {backgrounds}
       {activeStory}
+      {activeArgs}
       hasHome={Boolean(home)}
       {staticStoriesBase}
       {toolbar}

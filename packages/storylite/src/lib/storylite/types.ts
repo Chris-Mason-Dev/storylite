@@ -23,6 +23,8 @@ export type {
   StoryParameters,
   StoryRender,
   StoryRenderResult,
+  StorySourceContext,
+  StorySourceSnippet,
 } from '@storylite/contracts'
 
 export type StoryModule = {

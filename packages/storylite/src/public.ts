@@ -10,6 +10,8 @@ export type {
   StoryContext as StoryLiteStoryContext,
   StoryRenderResult as StoryLiteRenderResult,
   StoryRender as StoryLiteRender,
+  StorySourceContext as StoryLiteSourceContext,
+  StorySourceSnippet as StoryLiteSourceSnippet,
   StoryParameters as StoryLiteParameters,
   StoryMeta as StoryLiteMeta,
   StoryExport as StoryLiteStoryDefinition,
