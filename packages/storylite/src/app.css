@@ -794,7 +794,6 @@
     min-inline-size: 320px;
     max-inline-size: 100%;
     block-size: min(760px, 100%);
-    transform-origin: top center;
     border: 1px solid var(--sl-border);
     border-radius: 8px;
     background: Canvas;
@@ -901,6 +900,59 @@
     display: block;
     max-inline-size: 100%;
     overflow: auto;
+  }
+
+  .home-page table {
+    display: table;
+    inline-size: 100%;
+    margin: 18px 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--sl-border), var(--sl-text) 8%);
+    border-radius: 8px;
+    border-spacing: 0;
+    background: var(--sl-panel);
+    font-size: 0.92rem;
+  }
+
+  .home-page :is(th, td) {
+    padding: 10px 12px;
+    border-block-end: 1px solid var(--sl-border);
+    border-inline-end: 1px solid var(--sl-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .home-page :is(th, td):last-child {
+    border-inline-end: 0;
+  }
+
+  .home-page :is(th, td):first-child {
+    inline-size: 32%;
+  }
+
+  .home-page tbody tr:last-child > :is(th, td),
+  .home-page table > tr:last-child > :is(th, td) {
+    border-block-end: 0;
+  }
+
+  .home-page thead th {
+    background: var(--sl-panel-subtle);
+    color: var(--sl-text);
+    font-weight: 750;
+  }
+
+  .home-page tbody th {
+    color: var(--sl-text);
+    font-weight: 650;
+  }
+
+  .home-page td {
+    color: var(--sl-muted);
+    line-height: 1.5;
+  }
+
+  .home-page table code {
+    overflow-wrap: anywhere;
   }
 
   .home-page pre {

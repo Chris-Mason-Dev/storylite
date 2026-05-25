@@ -1,8 +1,9 @@
-import { defineConfig } from '@storylite/storylite'
 import preact from '@storylite/renderer-preact'
+import { defineConfig } from '@storylite/storylite'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  home: '## This is a Preact demo\n\nThis is a demo of the Preact renderer.',
   stories: ['./src/**/*.stories.tsx'],
   css: ['./src/styles.css'],
   vitePlugins: [tailwindcss()],
