@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@source './components';
+
+@layer demo {
+  :root {
+    --solid-accent: oklch(58% 0.18 235);
+    --solid-surface: light-dark(#f6fbff, #101923);
+    --solid-border: light-dark(#cfe3f7, #2b4866);
+    --solid-muted: light-dark(#52708f, #abc6de);
+    --solid-radius: 10px;
+  }
+}

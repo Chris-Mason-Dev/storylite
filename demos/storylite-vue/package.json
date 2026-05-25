@@ -1,0 +1,28 @@
+{
+  "name": "@storylite/demo-storylite-vue",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=4105 storylite dev",
+    "demo": "vite --port ${PORT:-4105}",
+    "build": "storylite build",
+    "preview": "storylite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@storylite/renderer-vue": "workspace:*",
+    "@storylite/storylite": "workspace:*",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/server-renderer": "^3.5.34",
+    "vue": "^3.5.34"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}

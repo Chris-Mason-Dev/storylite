@@ -1,64 +1,85 @@
-# Contributing Guide
+# Contributing
 
-Thanks for your interest to contribute to this project. Please take a moment and read through this
-guide:
+Thanks for taking the time to contribute.
 
-## Repository
+## Requirements
 
-- We use Node v18 or v20 and the `pnpm` package manager.
-- This project is a monorepo using `pnpm` workspaces.
-- We use [Convention Commits](https://www.conventionalcommits.org/en/v1.0.0/) for our commit
-  messages.
+- Node.js 24 or newer.
+- pnpm 11.2.2. The exact version is recorded in `package.json`.
 
-## Developing
-
-The different packages can be found in `packages/*`, and that's where you'll be mainly working.
-
-### Quick Start
-
-Here are the basic commands you'll need to get started:
+Install dependencies from the repository root:
 
 ```sh
-
-# Install dependencies
 pnpm install
+```
 
-# Start the dev server
+## Repository Layout
+
+- `packages/*`: published StoryLite packages and renderer adapters.
+- `apps/web`: the StoryLite demo site published to GitHub Pages.
+- `apps/e2e`: Playwright end-to-end tests.
+- `demos/*`: framework demos for HTML, React, Svelte, Vue, and Solid.
+
+## Common Commands
+
+```sh
+# Start every dev server
 pnpm dev
 
-# Build dist files
+# Start only the web demo
+pnpm dev:web
+
+# Build everything
 pnpm build
 
-# Run tests
-pnpm test
+# Build packages only
+pnpm build:packages
 
-# Run tests with coverage
-pnpm test:coverage
+# Build the web demo only
+pnpm build:web
 
-# Lint
-pnpm lint
+# Typecheck all workspaces
+pnpm typecheck
 
-# Format (format + lint --fix)
+# Check formatting
+pnpm format:check
+
+# Format files
 pnpm format
 
-# Type check
-pnpm type-check
+# Run unit tests
+pnpm test
 
-# Run all quality checks (formatter-check, type-check, lint, build, publint, test)
-pnpm quality-checks
+# Run Playwright e2e tests
+pnpm test:e2e
 
+# Run the full local QA sequence
+pnpm qa
 ```
 
 ## Testing
 
-We use `jest` to run tests. You can run all tests with:
+Unit tests use Vitest. End-to-end tests use Playwright.
+
+Before running e2e tests for the first time, install Chromium:
 
 ```sh
-pnpm test
+pnpm -F @storylite/e2e run e2e:install
 ```
 
-Tests ending with `*.test.tsx` or `*.dom.test.ts` are considered browser tests and will be run in a
-browser-like environment using `jsdom`.
+Run package-specific scripts with pnpm filters when you only need one workspace:
 
-Tests ending with `*.test.ts` (except `*.dom.test.ts`) are considered universal tests and will be
-run in both `node` and `jsdom` environments.
+```sh
+pnpm -F @storylite/web run test
+pnpm -F @storylite/storylite run typecheck
+```
+
+## Commits
+
+Use Conventional Commit messages:
+
+```txt
+feat(renderer-react): add static story rendering
+fix(cli): preserve configured base path in static output
+docs(readme): update install instructions
+```

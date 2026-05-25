@@ -1,0 +1,27 @@
+{
+  "name": "@storylite/demo-storylite-solid",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=4106 storylite dev",
+    "demo": "vite --port ${PORT:-4106}",
+    "build": "storylite build",
+    "preview": "storylite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@storylite/renderer-solid": "workspace:*",
+    "@storylite/storylite": "workspace:*",
+    "solid-js": "^1.9.13",
+    "vite-plugin-solid": "2.11.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}

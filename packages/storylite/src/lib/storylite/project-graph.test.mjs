@@ -1,0 +1,267 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createServer } from 'vite'
+import { describe, expect, it } from 'vitest'
+import {
+  generateProjectModuleCode,
+  loadManifest,
+  parseHomeMarkdown,
+  resolveStoryliteProjectPlugins,
+  storyPagePath,
+} from '../../../bin/project-graph.mjs'
+
+describe('storylite project graph', () => {
+  it('compiles home markdown frontmatter and content with mdsvex', async () => {
+    const home = await parseHomeMarkdown(`---
+title: Demo Home
+description: Welcome page
+---
+
+# Demo Home
+
+Use **StoryLite** with \`home.md\`.
+
+- First
+- Second`)
+
+    expect(home.frontmatter).toEqual({
+      title: 'Demo Home',
+      description: 'Welcome page',
+    })
+    expect(home.html).toContain('<h1>Demo Home</h1>')
+    expect(home.html).toContain('<strong>StoryLite</strong>')
+    expect(home.html).toContain('<code>home.md</code>')
+    expect(home.html).toContain('<li>First</li>')
+  })
+
+  it('loads all css-only convention files and home.md from a project', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-project-graph-'))
+    const storyliteDir = join(root, '.storylite')
+    const srcDir = join(root, 'src')
+    await mkdir(storyliteDir)
+    await mkdir(srcDir)
+
+    const conventionFiles = {
+      'manager-head.html': '<meta name="manager-head" content="yes">',
+      'manager-body-start.html': '<script>window.start = true</script>',
+      'manager-body-end.html': '<script>window.end = true</script>',
+      'manager.css': '.manager { color: red; }',
+      'ui.css': '.ui { color: blue; }',
+      'preview-head.html': '<meta name="preview-head" content="yes">',
+      'preview-body.html': '<script>window.previewAlias = true</script>',
+      'preview-body-start.html': '<div data-start></div>',
+      'preview-body-end.html': '<div data-end></div>',
+    }
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: ['./src/**/*.stories.ts'],
+          css: ['./src/styles.css'],
+          storyId: (_path, suggestedId) => suggestedId.replace(/^components-/, ''),
+        }`,
+      )
+      await writeFile(join(storyliteDir, 'home.md'), '# Home')
+      await writeFile(join(srcDir, 'styles.css'), '.demo { color: red; }')
+      await writeFile(join(srcDir, 'button.stories.ts'), 'export const Button = {}')
+      await Promise.all(
+        Object.entries(conventionFiles).map(([name, content]) =>
+          writeFile(join(storyliteDir, name), content),
+        ),
+      )
+
+      const manifest = await loadManifest(root)
+
+      expect(manifest.storyFiles).toHaveLength(1)
+      expect(manifest.cssFiles).toHaveLength(1)
+      expect(
+        manifest.storyIdResolver('src/components/button.stories.ts', 'components-button--default'),
+      ).toBe('button--default')
+      expect(manifest.storyIdResolverSource).toContain('suggestedId')
+      expect(manifest.home?.html).toContain('<h1>Home</h1>')
+      expect(manifest.manager.headHtml).toContain('manager-head')
+      expect(manifest.manager.bodyStartHtml).toContain('window.start')
+      expect(manifest.manager.bodyEndHtml).toContain('window.end')
+      expect(manifest.ui.css).toContain('.manager')
+      expect(manifest.ui.css).toContain('.ui')
+      expect(manifest.preview.headHtml).toContain('preview-head')
+      expect(manifest.preview.bodyStartHtml).toContain('data-start')
+      expect(manifest.preview.bodyEndHtml).toContain('previewAlias')
+      expect(manifest.preview.bodyEndHtml).toContain('data-end')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
+  it('generates base-path-safe static story page paths', () => {
+    expect(storyPagePath('components-button--primary')).toBe(
+      'stories/components-button--primary/index.html',
+    )
+  })
+
+  it('resolves custom renderer adapter entries from config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-renderer-graph-'))
+    const storyliteDir = join(root, '.storylite')
+    const srcDir = join(root, 'src')
+    await mkdir(storyliteDir)
+    await mkdir(srcDir)
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: ['./src/**/*.stories.ts'],
+          renderers: [
+            {
+              name: 'custom',
+              client: './.storylite/custom-client.ts',
+              static: './.storylite/custom-static.ts',
+            },
+          ],
+        }`,
+      )
+      await writeFile(join(storyliteDir, 'custom-client.ts'), 'export const renderStory = () => {}')
+      await writeFile(join(storyliteDir, 'custom-static.ts'), 'export const renderStory = () => {}')
+      await writeFile(join(srcDir, 'custom.stories.ts'), 'export const Custom = {}')
+
+      const manifest = await loadManifest(root)
+      const moduleCode = generateProjectModuleCode(manifest)
+
+      expect(manifest.rendererAdapters).toEqual([
+        {
+          name: 'custom',
+          clientImport: `/@fs${join(storyliteDir, 'custom-client.ts')}`,
+          staticImport: `/@fs${join(storyliteDir, 'custom-static.ts')}`,
+        },
+      ])
+      expect(moduleCode).toContain('"custom": () => import(')
+      expect(moduleCode).toContain('custom-client.ts')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
+  it('resolves project vite plugins from config', async () => {
+    const firstPlugin = { name: 'first' }
+    const secondPlugin = { name: 'second' }
+    const context = { target: 'static', command: 'build', projectRoot: '/project' }
+
+    expect(await resolveStoryliteProjectPlugins({}, context)).toEqual([])
+    expect(
+      await resolveStoryliteProjectPlugins(
+        {
+          vitePlugins: [firstPlugin, null, false, [secondPlugin]],
+        },
+        context,
+      ),
+    ).toEqual([firstPlugin, secondPlugin])
+
+    let receivedContext = null
+    const plugins = await resolveStoryliteProjectPlugins(
+      {
+        vitePlugins: (nextContext) => {
+          receivedContext = nextContext
+          return [firstPlugin]
+        },
+      },
+      context,
+    )
+
+    expect(plugins).toEqual([firstPlugin])
+    expect(receivedContext).toEqual(context)
+  })
+
+  it('imports configured css as vite-processed inline css', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-inline-css-'))
+    const srcDir = join(root, 'src')
+    await mkdir(srcDir)
+
+    const cssFile = join(srcDir, 'styles.css')
+    await writeFile(cssFile, '.demo { color: __TOKEN__; }')
+
+    const manifest = {
+      projectRoot: root,
+      storyFiles: [],
+      cssFiles: [cssFile],
+      setupFile: null,
+      rendererAdapters: [],
+      storyIdResolverSource: null,
+      ui: {},
+      preview: {},
+      manager: {},
+      home: null,
+    }
+    const moduleCode = generateProjectModuleCode(manifest)
+
+    expect(moduleCode).toContain('?inline')
+    expect(moduleCode).not.toContain('?raw')
+
+    const virtualId = 'virtual:test-storylite-project'
+    const resolvedVirtualId = `\0${virtualId}`
+    const server = await createServer({
+      configFile: false,
+      root,
+      appType: 'custom',
+      plugins: [
+        {
+          name: 'test-css-transform',
+          transform(code, id) {
+            if (id.includes('styles.css')) {
+              return code.replace('__TOKEN__', 'transformed')
+            }
+
+            return null
+          },
+        },
+        {
+          name: 'test-storylite-project',
+          resolveId(id) {
+            return id === virtualId ? resolvedVirtualId : null
+          },
+          load(id) {
+            return id === resolvedVirtualId ? moduleCode : null
+          },
+        },
+      ],
+      server: {
+        middlewareMode: true,
+        hmr: false,
+        ws: false,
+      },
+      optimizeDeps: {
+        entries: [],
+        noDiscovery: true,
+      },
+    })
+
+    try {
+      const module = await server.ssrLoadModule(virtualId)
+      expect(module.globalCss).toEqual(['.demo { color: transformed; }'])
+    } finally {
+      await server.close()
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
+  it('rejects renderer adapters that override built-in renderers', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-renderer-built-in-'))
+    const storyliteDir = join(root, '.storylite')
+    await mkdir(storyliteDir)
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: [],
+          renderers: [{ name: 'html', client: './renderer.ts' }],
+        }`,
+      )
+
+      await expect(loadManifest(root)).rejects.toThrow('cannot override a built-in renderer')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+})

@@ -1,3 +1,24 @@
+# only direct deps may use exotic sources like git repositories or direct tarball URLs
+blockExoticSubdeps: true
+
+# only packages released at least 1.5 days ago can be installed:
+minimumReleaseAge: 2160
+
+# when set to no-downgrade, pnpm will fail if a package's trust level has decreased compared to previous releases
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - 'semver@6.3.1'
+  - 'tinyexec@1.2.2'
+
 packages:
-  - "packages/*"
-  - "examples/*"
+  - 'apps/*'
+  - 'demos/*'
+  - 'packages/*'
+
+allowBuilds:
+  esbuild: true
+  msw: true
+
+overrides:
+  '@types/node': '^24'
+  'chokidar': '^5.0.0'

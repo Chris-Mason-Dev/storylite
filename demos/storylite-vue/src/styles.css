@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@source './components';
+
+@layer demo {
+  :root {
+    --vue-accent: oklch(62% 0.16 154);
+    --vue-surface: light-dark(#f7fff9, #102018);
+    --vue-border: light-dark(#cdebd6, #2f5a41);
+    --vue-muted: light-dark(#557562, #a9ccb5);
+    --vue-radius: 10px;
+  }
+}

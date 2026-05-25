@@ -1,60 +1,44 @@
 {
   "name": "@storylite/storylite",
-  "version": "0.15.1",
-  "description": "A lightweight alternative to StoryBook, built on top of Vite⚡️. This package contains the React app.",
-  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Lightweight alternative to Storybook for HTML, React, Svelte, Vue, and Solid component stories",
+  "bin": {
+    "storylite": "./bin/storylite.mjs"
+  },
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.cjs"
-    },
-    "./styles.css": "./dist/index.css"
+      "types": "./src/public.ts",
+      "default": "./src/public.ts"
+    }
   },
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsup --clean",
-    "dev": "tsup --watch",
-    "lint": "biome lint .",
-    "lint-fix": "biome lint --apply .",
-    "prepublishOnly": "pnpm run build",
-    "publint-check": "pnpm publint",
-    "type-check": "tsc --noEmit"
+    "dev": "node ./bin/storylite.mjs dev",
+    "build": "node ./bin/storylite.mjs build",
+    "preview": "node ./bin/storylite.mjs preview",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "typecheck": "pnpm check",
+    "publint": "publint",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint",
+    "test": "vitest run"
   },
   "dependencies": {
-    "clsx": "^2.1.0",
-    "zustand": "^4.5.2"
+    "@lucide/svelte": "^1.16.0",
+    "@storylite/contracts": "workspace:*",
+    "@storylite/preview-host": "workspace:*",
+    "mdsvex": "^0.12.7"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
-    "@types/react": "^18.2.77",
-    "@types/react-dom": "^18.2.25",
-    "publint": "^0.2.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
-  },
-  "peerDependencies": {
-    "@types/node": "^20.4.9",
-    "@types/react": "^18.2.19",
-    "@types/react-dom": "^18.2.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "typescript": "^5.1.6"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": false
-    },
-    "react-dom": {
-      "optional": false
-    },
-    "typescript": {
-      "optional": false
-    }
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^25.9.1",
+    "fast-glob": "^3.3.3",
+    "svelte": "^5.55.9",
+    "svelte-check": "^4.4.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14"
   }
 }

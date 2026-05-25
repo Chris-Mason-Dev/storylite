@@ -1,0 +1,31 @@
+{
+  "name": "@storylite/preview-host",
+  "version": "1.0.0",
+  "description": "Iframe bootstrap and live CSS mutation API for StoryLite",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "publint": "publint",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint",
+    "test": "vitest run"
+  }
+}

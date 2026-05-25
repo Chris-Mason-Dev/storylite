@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@source './components';
+
+@layer demo {
+  :root {
+    --svelte-accent: oklch(62% 0.18 38);
+    --svelte-surface: light-dark(#fffaf3, #201714);
+    --svelte-border: light-dark(#ead7c4, #4a3329);
+    --svelte-muted: light-dark(#765f52, #c9b5a6);
+    --svelte-radius: 10px;
+  }
+}

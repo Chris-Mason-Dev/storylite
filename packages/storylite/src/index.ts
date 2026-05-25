@@ -1,6 +1,0 @@
-export * from './app'
-export * from './app/renderApp'
-export * from './app/stores/global'
-export * from './app/stores/global.types'
-export * from './services/router'
-export * from './types'

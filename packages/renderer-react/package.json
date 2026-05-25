@@ -1,0 +1,52 @@
+{
+  "name": "@storylite/renderer-react",
+  "version": "1.0.0",
+  "description": "React renderer for StoryLite",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.mts",
+      "import": "./dist/client.mjs",
+      "default": "./dist/client.mjs"
+    },
+    "./static": {
+      "types": "./dist/static.d.mts",
+      "import": "./dist/static.mjs",
+      "default": "./dist/static.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "publint": "publint",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint"
+  },
+  "dependencies": {
+    "@storylite/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "peerDependencies": {
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  }
+}

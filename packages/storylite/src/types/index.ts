@@ -1,6 +1,0 @@
-export * from './components'
-export * from './config'
-export * from './core'
-export * from './parameters'
-export * from './story'
-export * from './ui'

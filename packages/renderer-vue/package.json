@@ -1,0 +1,52 @@
+{
+  "name": "@storylite/renderer-vue",
+  "version": "1.0.0",
+  "description": "Vue renderer for StoryLite",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.mts",
+      "import": "./dist/client.mjs",
+      "default": "./dist/client.mjs"
+    },
+    "./static": {
+      "types": "./dist/static.d.mts",
+      "import": "./dist/static.mjs",
+      "default": "./dist/static.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "publint": "publint",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint"
+  },
+  "dependencies": {
+    "@storylite/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/server-renderer": "^3.5.34",
+    "vue": "^3.5.34"
+  },
+  "peerDependencies": {
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vue/server-renderer": "^3.5.25",
+    "vue": "^3.5.25"
+  }
+}

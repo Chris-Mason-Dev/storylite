@@ -1,132 +1,754 @@
 # StoryLite
 
-> **Project Status** (2025-02-01): I currently have no buffer to work on this project. If you'd like to contribute, feel free to open a pull request. Thank you for your understanding!
-
-<a href="https://itsjavi.com/storylite" target="_blank"><img src="https://raw.githubusercontent.com/itsjavi/storylite/main/packages/storylite/assets/logo.svg" width="64" height="64" /></a>
-
 <p>
   <a href="https://npmjs.com/package/@storylite/storylite"><img src="https://img.shields.io/npm/v/@storylite/storylite.svg" alt="npm package"></a>
   <a href="https://bundlephobia.com/package/@storylite/storylite"><img src="https://img.shields.io/bundlephobia/min/@storylite/storylite?label=@storylite/storylite" alt="bundlephobia" /></a>
-  <a href="https://bundlephobia.com/package/@storylite/vite-plugin"><img src="https://img.shields.io/bundlephobia/min/@storylite/vite-plugin?label=@storylite/vite-plugin" alt="bundlephobia" /></a><br />
-  <a href="https://github.com/itsjavi/storylite/actions/workflows/quality.yml"><img src="https://github.com/itsjavi/storylite/actions/workflows/quality.yml/badge.svg?branch=main" alt="build status"></a>
-  <a href="https://app.codecov.io/gh/itsjavi/storylite"><img src="https://img.shields.io/codecov/c/github/itsjavi/storylite" alt="code coverage"></a>
-  <a href="https://www.jsdocs.io/package/@storylite/storylite"><img src="https://img.shields.io/badge/API%20Reference-📖-blue" alt="homepage"></a>
 </p>
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/storylite-demo?file=stories/index.stories.tsx)
+StoryLite is a lightweight, Vite-powered alternative to Storybook for component stories in HTML,
+React, Svelte, Vue, and Solid. It gives projects a focused story workflow with a managed app shell,
+isolated preview iframe, story controls, static output, and optional framework renderer adapters.
 
-StoryLite is a modern and lightweight toolkit for crafting and managing design systems and
-React components with ease. Inspired by the popular StoryBook UI and powered by Vite⚡️, StoryLite offers
-a streamlined and familiar developer experience, thanks to the story format compatible with
-[Component Story Format (CSF) 3.0](https://storybook.js.org/docs/react/api/csf).
+Use it when you want story-driven component previews without the full Storybook addon platform or
+configuration surface. Start with HTML or web components, then add framework adapters only where
+your project needs them.
 
-With StoryLite, you can quickly create, test, and refine React-based UI components in isolation, ensuring that
-your application maintains a consistent look and feel.
+![StoryLite](https://raw.githubusercontent.com/itsjavi/storylite/main/screenshot.png)
 
-Tailored for smaller React projects that crave simplicity without the overhead of a full StoryBook setup,
-StoryLite provides an intuitive UI that's customizable to your unique needs.
+## Highlights
 
-![StoryLite](https://raw.githubusercontent.com/itsjavi/storylite/main/packages/storylite/screenshot.png)
+- Managed CLI app: run `storylite dev`, `storylite build`, and `storylite preview`.
+- Portable previews: configured project CSS is injected into the isolated preview iframe and static
+  story pages.
+- Built-in renderers for `html` and `web-components`.
+- Optional adapters for React, Svelte, Vue, and Solid.
+- CSF-like story files with `args`, `argTypes`, controls, and per-story parameters.
+- Static build with a prerendered manager shell and one static page per story.
+- Project customization for branding, backgrounds, viewports, toolbar tools, menu links, HTML hooks,
+  home content, and Vite plugins.
 
-## Features
+## Install
 
-- **Lightweight** (36 KB minified, 10KB minified + gzipped), with few dependencies, specially
-  tailored for Single-Page Apps.
-- **Mobile-friendly** UI
-- **Full control**: You decide where to mount the StoryLite React app and how to run it with plain
-  Vite. No custom servers or other uncontrolled moving parts.
-- Fully **customizable**: UI styles, iframe styles, addons, etc.
-- Fully **isolated**: The canvas iframe lands with no styles by default. You control what styles to
-  load.
-- **Interoperable with StoryBook**'s CSF 3.0 format: With some minimal changes, you can almost
-  instantly make your StoryBook stories work with StoryLite when they follow the Component Story
-  Format.
-- **Render modes** via `renderFrame`: You can decide wether to render your story inside the iframe
-  (`iframe`), or outside in the same DOM tree as the UI (`root`). This is useful, e.g. for search
-  engines to be able to index the content.
-- **Built-in Addons** with the basics: dark mode, mobile view, grid, outline, maximize, open in new
-  tab, etc.
-- **HMR (Hot Module Reload)** support when story files (or any module they use) change.
-- **SSG (Static Site Generation)** support thanks to Vite.
-- **Markdown and MDX** support via Vite plugins.
+Install StoryLite in the package that owns your stories:
 
-## Installation
-
-To install StoryLite, simply run one of the following commands in the project where you want to
-define the stories:
-
-```bash
-# Using npm
-npm install -D @storylite/storylite vite @storylite/vite-plugin
-
-# Using yarn
-yarn add -D @storylite/storylite vite @storylite/vite-plugin
-
-# Using pnpm
-pnpm add -D @storylite/storylite vite @storylite/vite-plugin
+```sh
+pnpm add -D @storylite/storylite
 ```
 
-For the next steps, please check the
-[example React](https://github.com/itsjavi/storylite/tree/main/examples/react) directory to
-learn how to integrate it in your project.
+Add a framework adapter only when you need one:
 
-> While all examples here show how to integrate it with Vite, StoryLite can be used with any bundler
-> since it is a client-side React app that can be mounted anywhere in your project.
+```sh
+pnpm add -D @storylite/renderer-react
+pnpm add -D @storylite/renderer-svelte
+pnpm add -D @storylite/renderer-vue
+pnpm add -D @storylite/renderer-solid
+```
 
-### Adding MDX support
+Add scripts:
 
-Check the `docs` package to see how to add MDX support to your project:
+```json
+{
+  "scripts": {
+    "storylite": "storylite dev",
+    "storylite:build": "storylite build",
+    "storylite:preview": "storylite preview"
+  }
+}
+```
 
-- [vite.config.ts](https://github.com/itsjavi/storylite/tree/main/packages/docs/vite.config.ts)
-- [stories/index.stories.mdx](https://github.com/itsjavi/storylite/tree/main/packages/docs/stories/index.stories.mdx)
+## CLI
 
-With this setup you can:
+StoryLite exposes three commands:
 
-- Import modules from JS and JSX files.
-- Define the default story metadata in the MDX's frontmatter block. The body of the MDX will be used
-  as the default story component.
-- You can import other MD/MDX files in your stories, they will be ready to be used as JSX
-  components.
-- You can export JSX components to define new story variants.
+```sh
+storylite
+storylite dev
+storylite build
+storylite preview
+```
 
-You currently can't:
+Running `storylite` without a command prints help. `--help` and `-h` are supported globally and
+after each command.
 
-- You cannot import TS/TSX files in your MDXs. This is a limitation of Vite's MDX plugin.
-- You currently cannot export Story objects, instead you can only export JSX components.
+| Option       | Description           |
+| ------------ | --------------------- |
+| `-h, --help` | Print CLI usage help. |
 
-## Current Focus and Future
+### `storylite dev`
 
-While StoryLite is geared towards React components at the moment, the potential exists for broader
-compatibility with other frameworks supported by Vite. We're continuously enhancing the tool and
-looking to:
+Starts the managed Vite development server.
 
-- Better story interoperability with StoryBook.
-- Better extensibility and configuration options.
-- Expand addons to support multiple resizable viewports, and tools for zoom, accessibility, etc.
-- Ability to generate code snippets for each story.
-- Ability to edit component props and state in the UI.
-- Improve documentation and mobile experience of the UI.
-- Full test coverage.
-- Study the possibility of supporting other frameworks (Vue, Svelte, Solid, etc.)
+```sh
+storylite dev --port 4103 --host 127.0.0.1
+```
 
-## Contributing
+| Option          | Description                                                     |
+| --------------- | --------------------------------------------------------------- |
+| `--port <port>` | Dev server port. Defaults to `3993`, or `PORT` when it is set.  |
+| `--host [host]` | Host to listen on. Pass without a value to expose on all hosts. |
 
-Contributions are encouraged; Please check out our
-[contributing guidelines](https://github.com/itsjavi/storylite/tree/main/CONTRIBUTING.md) before
-submitting a PR.
+`EXPOSE_HOST=1` and `EXPOSE_HOST=true` also expose the dev server on all hosts.
 
-## License
+### `storylite build`
 
-[MIT License](https://github.com/itsjavi/storylite/tree/main/LICENSE)
+Builds the static StoryLite output into `dist-storylite`.
 
-## Acknowledgements
+```sh
+storylite build --base /docs/
+```
 
-Inspired by:
+| Option          | Description                                                            |
+| --------------- | ---------------------------------------------------------------------- |
+| `--base <path>` | Public base path for generated asset and story URLs. Defaults to `./`. |
 
-- [StoryBook](https://storybook.js.org/)
-- [Ladle](https://ladle.dev/)
+`STORYLITE_BASE` can also set the build base path.
 
-Built with:
+### `storylite preview`
 
-- [Vite](https://vitejs.dev/)
-- [React](https://react.dev/)
+Serves `dist-storylite` with Vite preview.
+
+```sh
+storylite preview --port 4103 --host 127.0.0.1 --base /docs/
+```
+
+| Option          | Description                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| `--port <port>` | Preview server port. Defaults to `3993`, or `PORT` when it is set.      |
+| `--host [host]` | Host to listen on. Defaults to exposing on all hosts for preview.       |
+| `--base <path>` | Public base path used while serving the built output. Defaults to `./`. |
+
+## Quick Start
+
+Create `.storylite/config.ts`:
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.ts'],
+  css: ['./src/styles.css'],
+})
+```
+
+Create a story:
+
+```ts
+import type { StoryLiteMeta, StoryLiteStoryDefinition } from '@storylite/storylite'
+import buttonHtml from './button.html?raw'
+
+export default {
+  title: 'Components/Button',
+} satisfies StoryLiteMeta
+
+export const Primary = {
+  args: {
+    label: 'Save changes',
+  },
+  argTypes: {
+    label: { control: 'text' },
+  },
+  render: (args) => buttonHtml.replace('{{ label }}', String(args.label)),
+} satisfies StoryLiteStoryDefinition<{ label: string }>
+```
+
+Run StoryLite:
+
+```sh
+pnpm storylite
+```
+
+Build static output:
+
+```sh
+pnpm storylite:build
+```
+
+`storylite build` writes `dist-storylite/index.html` plus one default-args static page per story at
+`dist-storylite/stories/<story-id>/index.html`. Static asset URLs are relative by default so the
+output can be hosted from a subpath.
+
+## Configuration
+
+StoryLite reads `.storylite/config.ts` first, then `.storylite/config.js`. Export with
+`defineConfig` for typed authoring:
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.{ts,tsx}'],
+  css: ['./src/styles.css'],
+  setup: './.storylite/setup.ts',
+  renderers: [],
+  vitePlugins: [],
+  storyId: (_path, suggestedId) => suggestedId,
+})
+```
+
+### Core Options
+
+| Option                       | Description                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| `stories`                    | Glob patterns for story modules. Required.                                                     |
+| `css`                        | Shared CSS files injected into the preview iframe and static story pages.                      |
+| `setup`                      | Optional module exporting `setupPreview(window)` for preview setup.                            |
+| `renderers`                  | Optional renderer adapters, such as `react()`, `svelte()`, `vue()`, or `solid()`.              |
+| `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms. |
+| `storyId(path, suggestedId)` | Optional story ID rewrite hook.                                                                |
+
+Story IDs strip the leading `src/` segment by default. For example,
+`src/components/button.stories.ts` becomes `components-button--primary`. Duplicate IDs are shown in
+the dev UI and fail `storylite build`.
+
+## Project CSS
+
+Configured `css` files are processed by Vite as `?inline`, so Vite plugin transforms run before the
+CSS string is injected into previews:
+
+```ts
+export default defineConfig({
+  css: ['./src/styles.css'],
+})
+```
+
+Story-specific CSS can also be supplied through `parameters.css`:
+
+```ts
+export const Primary = {
+  parameters: {
+    css: '.button { border-radius: 8px; }',
+  },
+}
+```
+
+If story-specific CSS needs Vite transforms, import it as `?inline` instead of `?raw`:
+
+```ts
+import css from './button.css?inline'
+
+export const Primary = {
+  parameters: { css },
+}
+```
+
+## Vite Plugins
+
+StoryLite runs an isolated Vite config for its managed app instead of merging the consuming
+project's full `vite.config.ts`. Add StoryLite-specific Vite plugins with `vitePlugins`:
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.tsx'],
+  css: ['./src/styles.css'],
+  vitePlugins: [tailwindcss()],
+})
+```
+
+`vitePlugins` can also be a callback:
+
+```ts
+vitePlugins: ({ target, command, projectRoot }) => {
+  if (target === 'static') return []
+  return [tailwindcss()]
+}
+```
+
+The callback receives:
+
+| Field         | Values                                    |
+| ------------- | ----------------------------------------- |
+| `target`      | `'manager'`, `'prerender'`, or `'static'` |
+| `command`     | `'serve'` or `'build'`                    |
+| `projectRoot` | Absolute path to the consuming project    |
+
+### Tailwind CSS 4
+
+Install Tailwind:
+
+```sh
+pnpm add -D tailwindcss @tailwindcss/vite
+```
+
+Configure StoryLite:
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.tsx'],
+  css: ['./src/styles.css'],
+  vitePlugins: [tailwindcss()],
+})
+```
+
+Add Tailwind to the configured stylesheet. When your utility classes live in story/component files,
+explicitly register those files with `@source`:
+
+```css
+@import 'tailwindcss';
+@source './components';
+```
+
+## Framework Adapters
+
+StoryLite ships built-in support for `html` and `web-components`. Framework support is added with
+renderer adapters so each project only installs the runtimes it uses.
+
+### React
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+import react from '@storylite/renderer-react'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.tsx'],
+  css: ['./src/styles.css'],
+  renderers: [react()],
+})
+```
+
+### Svelte, Vue, And Solid
+
+```ts
+import svelte from '@storylite/renderer-svelte'
+import vue from '@storylite/renderer-vue'
+import solid from '@storylite/renderer-solid'
+
+export default defineConfig({
+  renderers: [svelte(), vue(), solid()],
+})
+```
+
+Each adapter owns its client renderer, optional static renderer, and adapter-specific Vite plugins.
+Changing renderer adapters in `.storylite/config.ts` requires restarting `storylite dev`.
+
+## Story Format
+
+StoryLite supports a focused CSF-like subset:
+
+```ts
+import type { StoryLiteMeta, StoryLiteStoryDefinition } from '@storylite/storylite'
+
+type ButtonArgs = {
+  label: string
+  variant: 'primary' | 'secondary'
+  disabled: boolean
+}
+
+export default {
+  title: 'Components/Button',
+  args: {
+    variant: 'primary',
+    disabled: false,
+  },
+  argTypes: {
+    label: { control: 'text' },
+    variant: { control: 'select', options: ['primary', 'secondary'] },
+    disabled: { control: 'boolean' },
+  },
+  parameters: {
+    renderer: 'html',
+  },
+} satisfies StoryLiteMeta<ButtonArgs>
+
+export const Primary = {
+  name: 'Primary',
+  args: {
+    label: 'Save changes',
+  },
+  render: (args) => `<button data-variant="${args.variant}">${args.label}</button>`,
+} satisfies StoryLiteStoryDefinition<ButtonArgs>
+```
+
+### Default Export
+
+| Field        | Description                                             |
+| ------------ | ------------------------------------------------------- |
+| `title`      | Story group title in the sidebar.                       |
+| `component`  | Optional component reference or web component tag name. |
+| `args`       | Default story args.                                     |
+| `argTypes`   | Control metadata.                                       |
+| `parameters` | Default story parameters.                               |
+
+### Named Story Exports
+
+| Field                   | Description                                         |
+| ----------------------- | --------------------------------------------------- |
+| `name`                  | Optional display name. Defaults to the export name. |
+| `component`             | Optional story-specific component.                  |
+| `args`                  | Args merged over default export args.               |
+| `argTypes`              | Arg types merged over default export arg types.     |
+| `parameters`            | Parameters merged over default export parameters.   |
+| `render(args, context)` | Story render function.                              |
+
+### Controls
+
+Supported control types:
+
+- `boolean`
+- `text`
+- `number`
+- `color`
+- `select`
+
+Controls can be declared as a string:
+
+```ts
+argTypes: {
+  disabled: { control: 'boolean' },
+}
+```
+
+Or as an object:
+
+```ts
+argTypes: {
+  variant: {
+    control: { type: 'select' },
+    options: ['primary', 'secondary'],
+    description: 'Visual treatment',
+  },
+}
+```
+
+If no `control` is provided, StoryLite infers a simple control from the current arg value.
+
+### Story Parameters
+
+| Parameter                      | Description                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `renderer`                     | Renderer name: `html`, `web-components`, or an adapter renderer such as `react`. |
+| `css`                          | Per-story CSS string or array of strings.                                        |
+| `background`                   | Initial preview background value.                                                |
+| `defineCustomElements(window)` | Registers custom elements in the preview window.                                 |
+
+### Render Context
+
+`render(args, context)` receives:
+
+| Field      | Description                                |
+| ---------- | ------------------------------------------ |
+| `id`       | Normalized story ID.                       |
+| `title`    | Story group title.                         |
+| `name`     | Story display name.                        |
+| `canvas`   | Canvas element where the story is mounted. |
+| `document` | Preview document.                          |
+| `window`   | Preview window.                            |
+
+For HTML stories, return a string, `Node`, or `DocumentFragment`. Framework adapter stories usually
+use `component` and adapter-specific rendering instead.
+
+## Web Components
+
+Use the built-in `web-components` renderer when your component is a custom element:
+
+```ts
+export default {
+  title: 'Components/DemoButton',
+  component: 'demo-button',
+  parameters: {
+    renderer: 'web-components',
+    defineCustomElements: (window) => {
+      window.customElements.define('demo-button', DemoButton)
+    },
+  },
+}
+
+export const Primary = {
+  args: {
+    label: 'Save',
+  },
+}
+```
+
+Web components should remain progressive enhancements: the light-DOM markup should be visible and
+styled before JavaScript upgrades behavior.
+
+## UI Customization
+
+StoryLite's manager UI can be customized from `ui`:
+
+```ts
+export default defineConfig({
+  ui: {
+    brand: {
+      markHtml: '<span>UI</span>',
+      titleHtml: '<strong>Design System</strong>',
+    },
+    backgrounds: (defaults) => [...defaults, { label: 'Brand', value: '#eff6ff' }],
+    viewports: (defaults) =>
+      defaults.map((viewport) =>
+        viewport.icon === 'mobile' ? { ...viewport, width: 390 } : viewport,
+      ),
+    css: '.brand__mark { color: var(--sl-primary); }',
+  },
+})
+```
+
+| Option            | Description                                     |
+| ----------------- | ----------------------------------------------- |
+| `brand.markHtml`  | Trusted project HTML for the sidebar mark.      |
+| `brand.titleHtml` | Trusted project HTML for the sidebar title.     |
+| `backgrounds`     | Replace or extend preview background presets.   |
+| `viewports`       | Replace or extend toolbar viewport presets.     |
+| `css`             | CSS injected into the StoryLite manager chrome. |
+
+Viewport widths can be numbers or strings. Numeric widths are normalized to pixels. The built-in
+grid background can be tuned with preview CSS variables:
+
+- `--storylite-grid-size`
+- `--storylite-grid-major-size`
+- `--storylite-grid-offset`
+- `--storylite-grid-line-width`
+- `--storylite-grid-line-color`
+- `--storylite-grid-line-color-2`
+- `--storylite-grid-background-color`
+
+## Custom Toolbar Tools
+
+`ui.toolbar` adds project-defined tools to a separate toolbar group. StoryLite intentionally ships
+no project-specific custom toolbar defaults.
+
+```ts
+export default defineConfig({
+  ui: {
+    toolbar: [
+      {
+        type: 'toggle',
+        id: 'a11y-outlines',
+        label: 'A11y outlines',
+        icon: 'accessibility',
+        defaultValue: false,
+        target: { type: 'preview-class', name: 'show-a11y-outlines' },
+      },
+      {
+        type: 'select',
+        id: 'density',
+        label: 'Density',
+        icon: 'layout',
+        options: [
+          { label: 'Comfortable', value: 'comfortable' },
+          { label: 'Compact', value: 'compact' },
+        ],
+        target: { type: 'preview-class', prefix: 'density-' },
+      },
+      {
+        type: 'link',
+        id: 'repo',
+        label: 'Repository',
+        icon: 'external-link',
+        href: 'https://github.com/example/design-system',
+        target: '_blank',
+        rel: 'noreferrer',
+      },
+    ],
+  },
+})
+```
+
+Supported tools:
+
+| Type     | Description                                 |
+| -------- | ------------------------------------------- |
+| `toggle` | Icon button with `aria-pressed`.            |
+| `select` | Icon button with a popover list of options. |
+| `link`   | Regular toolbar link.                       |
+
+Supported toggle/select targets:
+
+| Target              | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `preview-class`     | Applies a class to the preview body.                        |
+| `preview-attribute` | Applies a `data-*` attribute to the preview body.           |
+| `manager-attribute` | Applies a `data-*` attribute to the StoryLite manager root. |
+| `url-query`         | Mirrors the value into the URL query string.                |
+| `url-hash`          | Mirrors the value into the hash query string.               |
+
+Toggle/select values persist in `storylite:toolbar-settings.customTools` unless `persist: false` is
+set. Stored values are validated against the current config at startup, so removed tools and invalid
+select values fall back cleanly.
+
+Supported built-in icon names:
+
+```ts
+;'accessibility' |
+  'bug' |
+  'external-link' |
+  'eye' |
+  'flag' |
+  'globe' |
+  'info' |
+  'layout' |
+  'monitor' |
+  'moon' |
+  'paint-bucket' |
+  'settings' |
+  'sun' |
+  'zap'
+```
+
+## Menu Links
+
+`ui.menuLinks` customizes the app menu opened from the sidebar. The default menu contains only
+`About`:
+
+```ts
+const defaultLinks = [
+  {
+    id: 'about',
+    label: 'About',
+    href: 'https://github.com/itsjavi/storylite',
+    icon: 'info',
+    target: '_blank',
+    rel: 'noreferrer',
+  },
+]
+```
+
+Extend or replace it with `(defaultLinks) => newLinks`:
+
+```ts
+export default defineConfig({
+  ui: {
+    menuLinks: (defaultLinks) => [
+      ...defaultLinks,
+      {
+        id: 'docs',
+        label: 'Docs',
+        icon: 'external-link',
+        href: '/docs',
+      },
+    ],
+  },
+})
+```
+
+Menu links are regular links. They do not run project JavaScript.
+
+## HTML Hooks And Convention Files
+
+StoryLite supports both config hooks and files in `.storylite/`.
+
+### Manager Document
+
+Manager hooks customize the StoryLite chrome document:
+
+```ts
+export default defineConfig({
+  managerHtmlAttrs: (defaults) => ({ ...defaults, lang: 'en', 'data-library': 'components' }),
+  managerBodyAttrs: { 'data-shell': 'storylite' },
+  managerHead: '<meta name="storylite-project" content="component-library">',
+  managerBodyStart: '<script>window.beforeStoryLite = true</script>',
+  managerBodyEnd: '<script>window.afterStoryLite = true</script>',
+})
+```
+
+Convention files:
+
+- `.storylite/manager-head.html`
+- `.storylite/manager-body-start.html`
+- `.storylite/manager-body-end.html`
+- `.storylite/manager.css`
+- `.storylite/ui.css`
+
+`manager.css` and `ui.css` are injected into the manager chrome.
+
+### Preview Document
+
+Preview hooks customize the isolated iframe document:
+
+```ts
+export default defineConfig({
+  previewHtmlAttrs: (defaults) => ({ ...defaults, lang: 'en', 'data-preview': 'component' }),
+  previewBodyAttrs: { 'data-theme-root': true },
+  previewHead: '<meta name="storylite-preview" content="component">',
+  previewBodyStart: '<div data-preview-start></div>',
+  previewBodyEnd: '<script>window.previewReady = true</script>',
+})
+```
+
+Convention files:
+
+- `.storylite/preview-head.html`
+- `.storylite/preview-body.html`
+- `.storylite/preview-body-start.html`
+- `.storylite/preview-body-end.html`
+
+`preview-body.html` is a backwards-compatible alias for `preview-body-end.html`.
+
+HTML fragments can be strings or callbacks that receive the convention-file default:
+
+```ts
+previewHead: (defaultHead) => `${defaultHead}<meta name="extra" content="true">`
+```
+
+HTML fragments are trusted project source. Do not feed untrusted user content into these hooks.
+
+## Home Page
+
+Add `.storylite/home.md` to render a Markdown welcome page at `#/`:
+
+```md
+---
+title: Component Library
+description: Component stories
+---
+
+# Component Library
+
+Use the sidebar to browse components.
+```
+
+The home page is compiled with mdsvex. When present, it replaces the default initial story canvas
+and is included in the static build's prerendered manager shell. When absent, StoryLite starts on
+the first story and hides the toolbar home button.
+
+## Routes
+
+StoryLite uses hash routes:
+
+| Route               | Description                                          |
+| ------------------- | ---------------------------------------------------- |
+| `#/`                | Home page when `.storylite/home.md` exists.          |
+| `#/story/:storyId`  | Normal isolated iframe preview.                      |
+| `#/canvas/:storyId` | Direct non-iframe rendering in the manager document. |
+
+In built output, the toolbar's open-canvas link points to the static page at
+`./stories/<story-id>/`.
+
+Press `/` to focus story search.
+
+## Static Builds
+
+`storylite build` performs three jobs:
+
+1. Builds the manager app into `dist-storylite`.
+2. Prerenders the manager shell and optional home page into `index.html`.
+3. Emits one static page per story at `dist-storylite/stories/<story-id>/index.html`.
+
+Static pages include configured preview HTML hooks, shared CSS, story CSS, and the renderer's static
+HTML when the renderer supports static rendering.
+
+## Caveats
+
+- StoryLite supports a focused CSF-like subset, not the complete Storybook API.
+- `play`, loaders, decorators, docs/autodocs, actions, and addon APIs are not part of the current
+  story format.
+- Custom toolbar tools are declarative only. They can toggle classes/attributes, update URL state,
+  or link elsewhere, but they cannot run arbitrary project callbacks.
+- StoryLite does not merge the consuming project's full `vite.config.ts`. Add StoryLite-specific
+  plugins through `vitePlugins`.
+- Tailwind CSS 4 may need explicit `@source` directives when utilities live in story/component files
+  and CSS is processed through StoryLite's configured `css` pipeline.
+- Static story pages render default args. They are meant for shareable previews and smoke coverage,
+  not a full interactive replacement for the dev manager.
+- Framework static rendering depends on the adapter. If an adapter or story cannot render
+  statically, StoryLite will still build the manager and can show warnings in static pages.
+- Some framework adapters still have partial HMR behavior in dev. React and Solid stories may need a
+  manual refresh or `storylite dev` restart after certain component edits.
+- HTML customization hooks are trusted project-source HTML.
+- Config changes and renderer adapter changes may require restarting `storylite dev`.

@@ -1,0 +1,19 @@
+{
+  "name": "@storylite/e2e",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
+    "e2e:show": "PLAYWRIGHT_SLOW_MO=500 playwright test --headed",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
+    "@vitest/browser-playwright": "^4.1.7",
+    "typescript": "^6.0.3"
+  }
+}

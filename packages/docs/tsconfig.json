@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "include": ["*.ts", "*.tsx", "src/**/*", "stories/**/*", ".storylite/**/*"],
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "allowSyntheticDefaultImports": true,
-    "types": ["node", "react", "react-dom", "@storylite/vite-plugin/virtual"]
-  }
-}

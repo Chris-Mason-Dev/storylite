@@ -1,0 +1,51 @@
+{
+  "name": "@storylite/renderer-solid",
+  "version": "1.0.0",
+  "description": "Solid.js renderer for StoryLite",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.mts",
+      "import": "./dist/client.mjs",
+      "default": "./dist/client.mjs"
+    },
+    "./static": {
+      "types": "./dist/static.d.mts",
+      "import": "./dist/static.mjs",
+      "default": "./dist/static.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "publint": "publint",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint"
+  },
+  "dependencies": {
+    "@storylite/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "solid-js": "^1.9.13",
+    "vite-plugin-solid": "2.11.12"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.10",
+    "vite-plugin-solid": "2.11.8"
+  }
+}

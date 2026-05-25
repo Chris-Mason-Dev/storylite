@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      ;(() => {
+        try {
+          const theme = localStorage.getItem('storylite:app-theme')
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.style.colorScheme = theme
+          } else {
+            document.documentElement.style.removeProperty('color-scheme')
+          }
+        } catch {
+          document.documentElement.style.removeProperty('color-scheme')
+        }
+      })()
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Lightweight alternative to Storybook for HTML, React, Svelte, Vue, and Solid component stories."
+    />
+    <!--storylite-manager-head-->
+    <!--app-head-->
+    <title>StoryLite</title>
+  </head>
+  <body>
+    <div id="app"><!--app-html--></div>
+    <script type="module" src="/src/main.ts"></script>
+    <noscript class="noscript__alert">
+      <p>
+        JavaScript is required to run this application. Please enable JavaScript in your browser
+        settings.
+      </p>
+    </noscript>
+  </body>
+</html>

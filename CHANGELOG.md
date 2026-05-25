@@ -1,39 +1,25 @@
 # Change Log
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+All notable changes to this project will be documented in this file. See
+[Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 ## [0.15.1](https://github.com/itsjavi/storylite/compare/v0.15.0...v0.15.1) (2024-03-27)
 
-
 ### Bug Fixes
 
-* make base and canvas paths configurable ([9dfc797](https://github.com/itsjavi/storylite/commit/9dfc7975fb8ff4bdfc5f62c4a5f5d13b731932eb))
-
-
-
-
+- make base and canvas paths configurable
+  ([9dfc797](https://github.com/itsjavi/storylite/commit/9dfc7975fb8ff4bdfc5f62c4a5f5d13b731932eb))
 
 # [0.15.0](https://github.com/itsjavi/storylite/compare/v0.14.2...v0.15.0) (2024-03-27)
 
-
 ### Features
 
-* add support for React Server Components ([410ef23](https://github.com/itsjavi/storylite/commit/410ef234adfb33f161dd35ecb0228312d3ee15f1))
-
-
-
-
+- add support for React Server Components
+  ([410ef23](https://github.com/itsjavi/storylite/commit/410ef234adfb33f161dd35ecb0228312d3ee15f1))
 
 ## [0.14.2](https://github.com/itsjavi/storylite/compare/v0.14.1...v0.14.2) (2024-03-27)
 
 **Note:** Version bump only for package storylite
-
-
-
-
-
-
 
 ## v0.14.0
 
@@ -43,8 +29,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 - Publish script ([ca5026a](https://github.com/itsjavi/storylite/commit/ca5026a))
 - Publish script ([4efec23](https://github.com/itsjavi/storylite/commit/4efec23))
-- Props component props could not be required in stories. closes #72 ([#72](https://github.com/itsjavi/storylite/issues/72))
-- Empty decorator array not rendering component properly. fix args inheritance. closes #76 ([#76](https://github.com/itsjavi/storylite/issues/76))
+- Props component props could not be required in stories. closes #72
+  ([#72](https://github.com/itsjavi/storylite/issues/72))
+- Empty decorator array not rendering component properly. fix args inheritance. closes #76
+  ([#76](https://github.com/itsjavi/storylite/issues/76))
 
 ### 💅 Refactors
 
@@ -53,14 +41,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### 🏡 Chore
 
 - Replace eslint & prettier with biome ([#78](https://github.com/itsjavi/storylite/pull/78))
-- Upgrade dependencies and fix linter issues ([7794c4a](https://github.com/itsjavi/storylite/commit/7794c4a))
+- Upgrade dependencies and fix linter issues
+  ([7794c4a](https://github.com/itsjavi/storylite/commit/7794c4a))
 
 ### ❤️ Contributors
 
-- Javi Aguilar 
+- Javi Aguilar
 - Jrson
-
-
 
 ## v0.13.0
 

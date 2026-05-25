@@ -1,0 +1,28 @@
+{
+  "name": "@storylite/demo-storylite-svelte",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=4104 storylite dev",
+    "demo": "vite --port ${PORT:-4104}",
+    "build": "storylite build",
+    "preview": "storylite preview",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@storylite/renderer-svelte": "workspace:*",
+    "@storylite/storylite": "workspace:*",
+    "svelte": "^5.55.9"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tailwindcss/vite": "^4.3.0",
+    "svelte-check": "^4.4.8",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}

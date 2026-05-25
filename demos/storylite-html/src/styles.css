@@ -1,0 +1,302 @@
+@layer reset, tokens, components, utilities;
+
+@layer reset {
+  :root {
+    color-scheme: light dark;
+    font-family:
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
+    background: light-dark(#fbfcfd, #121417);
+    color: light-dark(#172033, #f7fafc);
+  }
+
+  body {
+    margin: 0;
+  }
+}
+
+@layer tokens {
+  :root {
+    --demo-accent: oklch(58% 0.14 180);
+    --demo-accent-strong: oklch(45% 0.15 185);
+    --demo-danger: oklch(57% 0.19 28);
+    --demo-surface: light-dark(#ffffff, #191d24);
+    --demo-surface-muted: light-dark(#edf3f2, #202832);
+    --demo-border: light-dark(#d5dde5, #343d4b);
+    --demo-text-muted: light-dark(#5d6b7c, #a8b1bd);
+    --demo-radius: 10px;
+    --wc-accent: oklch(56% 0.14 170);
+    --wc-accent-soft: color-mix(in oklab, var(--wc-accent), transparent 84%);
+    --wc-surface: light-dark(#ffffff, #18201f);
+    --wc-surface-alt: light-dark(#edf7f4, #1f2b29);
+    --wc-border: light-dark(#cbded8, #334541);
+    --wc-muted: light-dark(#60736e, #a3b2ad);
+    --wc-radius: 12px;
+  }
+}
+
+@layer components {
+  .demo-home,
+  .demo-stack {
+    display: grid;
+    gap: 24px;
+  }
+
+  .demo-home {
+    max-inline-size: 1040px;
+    padding: 32px;
+  }
+
+  .demo-section {
+    display: grid;
+    gap: 22px;
+  }
+
+  body.show-a11y-outlines :is(a, button, input, [tabindex]) {
+    outline: 2px solid var(--demo-accent);
+    outline-offset: 3px;
+  }
+
+  body.density-compact {
+    --demo-radius: 7px;
+  }
+
+  body.density-compact .demo-home,
+  body.density-compact .demo-stack {
+    gap: 16px;
+  }
+
+  .eyebrow,
+  .demo-badge {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h1,
+  h2 {
+    max-inline-size: 18ch;
+    font-size: clamp(2rem, 1.7rem + 2vw, 3.5rem);
+    line-height: 1;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  .demo-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .demo-btn {
+    --button-bg: var(--demo-accent);
+    --button-fg: white;
+    --button-border: transparent;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 40px;
+    padding-inline: 16px;
+    border: 1px solid var(--button-border);
+    border-radius: var(--demo-radius);
+    background: var(--button-bg);
+    color: var(--button-fg);
+    font-weight: 750;
+  }
+
+  .demo-btn[data-variant='secondary'] {
+    --button-bg: var(--demo-surface-muted);
+    --button-fg: currentColor;
+    --button-border: var(--demo-border);
+  }
+
+  .demo-btn[data-variant='danger'] {
+    --button-bg: var(--demo-danger);
+  }
+
+  .demo-card,
+  .demo-field,
+  .demo-layout {
+    border: 1px solid var(--demo-border);
+    border-radius: var(--demo-radius);
+    background: var(--demo-surface);
+  }
+
+  .demo-card {
+    container-type: inline-size;
+    display: grid;
+    gap: 14px;
+    max-inline-size: 520px;
+    padding: 18px;
+  }
+
+  .demo-card__meta,
+  .demo-field span,
+  .demo-layout p {
+    color: var(--demo-text-muted);
+  }
+
+  .demo-field {
+    display: grid;
+    gap: 7px;
+    max-inline-size: 420px;
+    padding: 14px;
+  }
+
+  .demo-field input {
+    min-block-size: 40px;
+    border: 1px solid var(--demo-border);
+    border-radius: 8px;
+    padding-inline: 12px;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .demo-badge {
+    display: inline-flex;
+    inline-size: fit-content;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--demo-accent), transparent 82%);
+    color: var(--demo-accent-strong);
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .demo-layout article {
+    display: grid;
+    gap: 6px;
+    min-block-size: 120px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--demo-surface-muted);
+  }
+
+  @container (width > 420px) {
+    .demo-card {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+  }
+
+  @media (width < 700px) {
+    .demo-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .wc-demo-page {
+    gap: 22px;
+  }
+
+  .wc-demo-page > header {
+    display: grid;
+    gap: 8px;
+  }
+
+  .wc-demo-page > header p,
+  sl-demo-alert span,
+  sl-demo-disclosure > div {
+    color: var(--wc-muted);
+  }
+
+  .wc-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  sl-demo-button {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 42px;
+    padding-inline: 16px;
+    border: 1px solid transparent;
+    border-radius: var(--wc-radius);
+    background: var(--wc-accent);
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  sl-demo-button[variant='secondary'] {
+    border-color: var(--wc-border);
+    background: var(--wc-surface-alt);
+    color: currentColor;
+  }
+
+  sl-demo-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
+  sl-demo-alert,
+  sl-demo-disclosure,
+  sl-demo-meter {
+    display: grid;
+    gap: 10px;
+    max-inline-size: 640px;
+    border: 1px solid var(--wc-border);
+    border-radius: var(--wc-radius);
+    background: var(--wc-surface);
+    padding: 16px;
+  }
+
+  sl-demo-alert[tone='success'] {
+    border-color: color-mix(in oklab, var(--wc-accent), transparent 45%);
+    background: var(--wc-accent-soft);
+  }
+
+  sl-demo-disclosure > button {
+    min-block-size: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--wc-surface-alt);
+    color: inherit;
+    font: inherit;
+    font-weight: 800;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  sl-demo-disclosure:not([open]) > div {
+    display: none;
+  }
+
+  sl-demo-meter {
+    --meter-accent: var(--wc-accent);
+  }
+
+  sl-demo-meter::after {
+    content: '';
+    display: block;
+    inline-size: 100%;
+    block-size: 10px;
+    border-radius: 999px;
+    background:
+      linear-gradient(var(--meter-accent), var(--meter-accent)) 0 /
+        calc(var(--meter-value, 50) * 1%) 100% no-repeat,
+      var(--wc-surface-alt);
+  }
+}

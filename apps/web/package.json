@@ -1,0 +1,24 @@
+{
+  "name": "@storylite/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=3993 storylite dev",
+    "demo": "vite --port ${PORT:-3993}",
+    "build": "storylite build",
+    "build:pages": "storylite build --base /storylite/",
+    "preview": "storylite preview",
+    "preview:pages": "storylite preview --base /storylite/",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@storylite/storylite": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}
