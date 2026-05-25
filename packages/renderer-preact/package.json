@@ -1,6 +1,6 @@
 {
   "name": "@storylite/renderer-preact",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Preact renderer for StoryLite",
   "files": [
     "dist"

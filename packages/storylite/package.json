@@ -1,6 +1,6 @@
 {
   "name": "@storylite/storylite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight alternative to Storybook for HTML, React, Svelte, Vue, and Solid component stories",
   "bin": {
     "storylite": "./bin/storylite.mjs"
