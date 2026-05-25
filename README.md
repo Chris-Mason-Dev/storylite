@@ -6,9 +6,10 @@
   <a href="https://context7.com/itsjavi/storylite/llms.txt?tokens=10000"><img src="https://img.shields.io/badge/llms.txt-docs-blue" alt="LLMs docs" /></a>
 </p>
 
-StoryLite is a lightweight, Vite-powered alternative to Storybook for component stories in HTML,
-React, Svelte, Vue, and Solid. It gives projects a focused story workflow with a managed app shell,
-isolated preview iframe, story controls, static output, and optional framework renderer adapters.
+StoryLite is a lightweight, Vite-powered alternative to Storybook for building and showcasing
+component stories in HTML, React, Svelte, Vue, and Solid. It gives projects a focused story workflow
+with a managed app shell, isolated preview iframe, story controls, static output, and optional
+framework renderer adapters.
 
 Use it when you want story-driven component previews without the full Storybook addon platform or
 configuration surface. Start with HTML or web components, then add framework adapters only where
