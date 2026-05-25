@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte'
+  import { onDestroy, untrack } from 'svelte'
   import type { StoryLiteBackgroundPreset } from '../../public'
   import {
     renderStory,
@@ -66,6 +66,10 @@
       : '',
   )
 
+  function applyIframeZoom(targetIframe: HTMLIFrameElement, zoom: number): void {
+    targetIframe.contentDocument?.body.style.setProperty('zoom', String(zoom / 100))
+  }
+
   onDestroy(() => {
     renderToken += 1
     void mountedStory?.cleanup()
@@ -97,6 +101,7 @@
         ...options,
         rendererClientLoaders,
       })
+      applyIframeZoom(currentIframe, untrack(() => storyliteSettings.zoom))
       renderedStory.then(
         (nextMountedStory) => {
           if (token !== renderToken) {
@@ -180,6 +185,12 @@
   })
 
   $effect(() => {
+    if (iframe && !isCanvasRoute) {
+      applyIframeZoom(iframe, storyliteSettings.zoom)
+    }
+  })
+
+  $effect(() => {
     const customTools = storyliteSettings.customTools
 
     if (iframe?.contentDocument?.body && !isCanvasRoute) {
@@ -224,7 +235,6 @@
           class="canvas-frame"
           class:canvas-frame--fluid={isFluidViewport}
           style:width={storyliteSettings.viewport}
-          style:scale={storyliteSettings.zoom / 100}
           aria-label="Isolated story preview"
         >
           <iframe bind:this={iframe} title="StoryLite isolated preview"></iframe>
