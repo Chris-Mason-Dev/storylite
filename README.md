@@ -1,8 +1,9 @@
 # StoryLite
 
-<p>
+<p style="display: flex; gap: 10px;">
   <a href="https://npmjs.com/package/@storylite/storylite"><img src="https://img.shields.io/npm/v/@storylite/storylite.svg" alt="npm package"></a>
   <a href="https://bundlephobia.com/package/@storylite/storylite"><img src="https://img.shields.io/bundlephobia/min/@storylite/storylite?label=@storylite/storylite" alt="bundlephobia" /></a>
+  <a href="https://context7.com/itsjavi/storylite/llms.txt?tokens=10000"><img src="https://img.shields.io/badge/llms.txt-docs-blue" alt="LLMs docs" /></a>
 </p>
 
 StoryLite is a lightweight, Vite-powered alternative to Storybook for component stories in HTML,

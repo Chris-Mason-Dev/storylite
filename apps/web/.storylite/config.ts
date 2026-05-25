@@ -10,6 +10,15 @@ export default defineConfig({
   publicDir: './public',
   storyId: (_path, suggestedId) => suggestedId.replace(/^components-/, ''),
   ui: {
+    menuLinks: (defaultLinks) => [
+      {
+        id: 'llms',
+        label: 'llms.txt',
+        icon: 'zap',
+        href: 'https://context7.com/itsjavi/storylite/llms.txt?tokens=10000',
+      },
+      ...defaultLinks,
+    ],
     brand: {
       subtitle: 'Component Stories',
     },
