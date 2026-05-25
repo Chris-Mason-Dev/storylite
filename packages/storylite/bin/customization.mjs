@@ -28,10 +28,10 @@ export const defaultViewports = [
 export const defaultToolbarTools = []
 export const defaultMenuLinks = [
   {
-    id: 'about',
-    label: 'About',
+    id: 'github',
+    label: 'GitHub',
     href: 'https://github.com/itsjavi/storylite',
-    icon: 'info',
+    icon: 'globe',
     target: '_blank',
     rel: 'noreferrer',
   },

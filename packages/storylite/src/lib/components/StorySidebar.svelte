@@ -121,7 +121,9 @@
   <header class="brand">
     <div class="brand__mark" aria-hidden="true">{@html projectUi.brand.markHtml}</div>
     <div class="brand__content">
-      <div class="brand__title">{@html projectUi.brand.titleHtml}</div>
+      <a class="brand__title" href="#/" aria-label="Open StoryLite home">
+        {@html projectUi.brand.titleHtml}
+      </a>
       <span>{brandSubtitle}</span>
     </div>
     <button

@@ -15,6 +15,8 @@ Use it when you want story-driven component previews without the full Storybook 
 configuration surface. Start with HTML or web components, then add framework adapters only where
 your project needs them.
 
+[GitHub](https://github.com/itsjavi/storylite)
+
 ![StoryLite](https://raw.githubusercontent.com/itsjavi/storylite/main/screenshot.png)
 
 ## Highlights

@@ -868,6 +868,19 @@
     line-height: 1.6;
   }
 
+  .home-page a {
+    color: var(--sl-primary);
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+  }
+
+  .home-page a:hover,
+  .home-page a:focus-visible {
+    text-decoration-style: solid;
+  }
+
   .home-page code {
     border: 1px solid var(--sl-border);
     border-radius: 5px;

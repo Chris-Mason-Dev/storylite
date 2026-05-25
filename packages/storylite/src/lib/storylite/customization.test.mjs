@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -254,10 +254,10 @@ describe('storylite customization', () => {
   it('normalizes menu links with About as the default fallback', () => {
     expect(resolveMenuLinks()).toEqual([
       {
-        id: 'about',
-        label: 'About',
+        id: 'github',
+        label: 'GitHub',
         href: 'https://github.com/itsjavi/storylite',
-        icon: 'info',
+        icon: 'globe',
         target: '_blank',
         rel: 'noreferrer',
       },
@@ -281,10 +281,10 @@ describe('storylite customization', () => {
       ]),
     ).toEqual([
       {
-        id: 'about',
-        label: 'About',
+        id: 'github',
+        label: 'GitHub',
         href: 'https://github.com/itsjavi/storylite',
-        icon: 'info',
+        icon: 'globe',
         target: '_blank',
         rel: 'noreferrer',
       },
