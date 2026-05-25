@@ -1,0 +1,4 @@
+interface:
+  display_name: 'StoryLite Create Story'
+  short_description: 'Create StoryLite CSF-like stories'
+  default_prompt: 'Use $storylite-create-story to create a StoryLite story for this component.'
