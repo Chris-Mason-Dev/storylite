@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { StoryLiteToolbarTool } from '../../public'
-import { resolveCustomToolbarSettings } from './settings.svelte'
+import { applyAppTheme, resolveCustomToolbarSettings } from './settings.svelte'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('storylite toolbar settings', () => {
   it('hydrates custom tool state from valid stored values only', () => {
@@ -85,3 +89,48 @@ describe('storylite toolbar settings', () => {
     ).toEqual({ density: 'comfortable' })
   })
 })
+
+describe('storylite app theme settings', () => {
+  it('marks forced themes on the root element for built CSS output', () => {
+    const root = createRootElement()
+    vi.stubGlobal('document', { documentElement: root })
+
+    applyAppTheme('light')
+
+    expect(root.dataset.storyliteAppTheme).toBe('light')
+    expect(root.style.colorScheme).toBe('light')
+
+    applyAppTheme('dark')
+
+    expect(root.dataset.storyliteAppTheme).toBe('dark')
+    expect(root.style.colorScheme).toBe('dark')
+  })
+
+  it('clears forced theme markers when using the system theme', () => {
+    const root = createRootElement()
+    root.dataset.storyliteAppTheme = 'dark'
+    root.style.colorScheme = 'dark'
+    vi.stubGlobal('document', { documentElement: root })
+
+    applyAppTheme('system')
+
+    expect(root.dataset.storyliteAppTheme).toBeUndefined()
+    expect(root.style.colorScheme).toBe('')
+  })
+})
+
+function createRootElement() {
+  const style = {
+    colorScheme: '',
+    removeProperty(this: { colorScheme: string }, name: string) {
+      if (name === 'color-scheme') {
+        this.colorScheme = ''
+      }
+    },
+  }
+
+  return {
+    dataset: {} as Record<string, string | undefined>,
+    style,
+  }
+}

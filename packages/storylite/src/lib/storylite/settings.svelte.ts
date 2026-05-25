@@ -64,10 +64,14 @@ export function hydrateStoryLiteSettings(options: StoryLiteSettingsOptions): voi
 }
 
 export function applyAppTheme(theme: AppTheme): void {
+  const root = document.documentElement
+
   if (theme === 'system') {
-    document.documentElement.style.removeProperty('color-scheme')
+    delete root.dataset.storyliteAppTheme
+    root.style.removeProperty('color-scheme')
   } else {
-    document.documentElement.style.colorScheme = theme
+    root.dataset.storyliteAppTheme = theme
+    root.style.colorScheme = theme
   }
 }
 

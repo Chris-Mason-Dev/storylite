@@ -1,5 +1,13 @@
 @layer reset, theme, layout, components;
 
+:root[data-storylite-app-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-storylite-app-theme='dark'] {
+  color-scheme: dark;
+}
+
 @layer reset {
   :root {
     color-scheme: light dark;

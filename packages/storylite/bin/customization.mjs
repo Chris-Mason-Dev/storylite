@@ -467,11 +467,14 @@ export function renderManagerDocumentHead(options = {}) {
     `<script>
       ;(() => {
         try {
+          const root = document.documentElement
           const theme = localStorage.getItem('storylite:app-theme')
           if (theme === 'light' || theme === 'dark') {
-            document.documentElement.style.colorScheme = theme
+            root.dataset.storyliteAppTheme = theme
+            root.style.colorScheme = theme
           } else {
-            document.documentElement.style.removeProperty('color-scheme')
+            delete root.dataset.storyliteAppTheme
+            root.style.removeProperty('color-scheme')
           }
         } catch {
           document.documentElement.style.removeProperty('color-scheme')
