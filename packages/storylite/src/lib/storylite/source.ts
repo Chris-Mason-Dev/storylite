@@ -5,6 +5,14 @@ import type {
   StoryLiteStory,
   StorySourceContext,
 } from './types'
+import {
+  escapeAttribute,
+  escapeHtml,
+  isNodeLike,
+  isPrimitive,
+  isRecord,
+  kebabCase,
+} from './utils.js'
 
 type ComponentSource = {
   readonly name: string
@@ -273,42 +281,4 @@ function jsLiteral(value: unknown): string | null {
 
   const literal = JSON.stringify(value)
   return literal === undefined ? null : literal
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isNodeLike(value: unknown): value is Node | DocumentFragment {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'nodeType' in value &&
-    typeof (value as { nodeType?: unknown }).nodeType === 'number'
-  )
-}
-
-function isPrimitive(value: unknown): value is string | number | boolean {
-  return ['string', 'number', 'boolean'].includes(typeof value)
-}
-
-function kebabCase(value: string): string {
-  return value
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .toLowerCase()
-}
-
-function escapeHtml(value: unknown): string {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-}
-
-function escapeAttribute(value: unknown): string {
-  return escapeHtml(value).replaceAll('`', '&#96;')
 }

@@ -29,11 +29,25 @@
   "bin": {
     "storylite": "./bin/storylite.mjs"
   },
+  "files": [
+    "bin",
+    "dist",
+    "index.html",
+    "public",
+    "src",
+    "svelte.config.js",
+    "tsconfig.app.json",
+    "!src/**/*.test.*"
+  ],
   "type": "module",
+  "main": "./dist/public.mjs",
+  "module": "./dist/public.mjs",
+  "types": "./dist/public.d.mts",
   "exports": {
     ".": {
-      "types": "./src/public.ts",
-      "default": "./src/public.ts"
+      "types": "./dist/public.d.mts",
+      "import": "./dist/public.mjs",
+      "default": "./dist/public.mjs"
     }
   },
   "publishConfig": {
@@ -41,7 +55,9 @@
   },
   "scripts": {
     "dev": "node ./bin/storylite.mjs dev",
-    "build": "node ./bin/storylite.mjs build",
+    "build": "pnpm build:public && pnpm build:manager",
+    "build:manager": "node ./bin/storylite.mjs build",
+    "build:public": "tsdown",
     "preview": "node ./bin/storylite.mjs preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "typecheck": "pnpm check",
@@ -54,16 +70,16 @@
     "@lucide/svelte": "^1.16.0",
     "@storylite/contracts": "workspace:*",
     "@storylite/preview-host": "workspace:*",
-    "mdsvex": "^0.12.7"
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "fast-glob": "^3.3.3",
+    "mdsvex": "^0.12.7",
+    "svelte": "^5.55.9",
+    "vite": "^8.0.14"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^25.9.1",
-    "fast-glob": "^3.3.3",
-    "svelte": "^5.55.9",
     "svelte-check": "^4.4.8",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.14"
+    "typescript": "^6.0.3"
   }
 }

@@ -13,6 +13,7 @@ import type {
   StoryNormalizationResult,
   StoryParameters,
 } from './types'
+import { isRecord, kebabCase } from './utils.js'
 
 const reservedExports = new Set(['default', '__esModule'])
 
@@ -214,14 +215,6 @@ function labelFromExportName(exportName: string): string {
     .trim()
 }
 
-function kebabCase(value: string): string {
-  return value
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .toLowerCase()
-}
-
 function mergeArgs(metaArgs: StoryArgs | undefined, storyArgs: StoryArgs | undefined): StoryArgs {
   return { ...(metaArgs ?? {}), ...(storyArgs ?? {}) }
 }
@@ -265,8 +258,4 @@ function selectRenderer(
   }
 
   return 'html'
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

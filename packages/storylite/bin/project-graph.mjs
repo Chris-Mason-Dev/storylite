@@ -8,6 +8,7 @@ import { render as renderSvelte } from 'svelte/server'
 import { compile as compileSvelte } from 'svelte/compiler'
 import { loadConfigFromFile } from 'vite'
 import { resolveStoryliteCustomization } from './customization.mjs'
+import { isBareImportSpecifier, isRecord } from '../src/lib/storylite/utils.js'
 
 export const virtualProjectId = 'virtual:storylite/project'
 export const resolvedVirtualProjectId = `\0${virtualProjectId}`
@@ -248,11 +249,15 @@ async function loadStoryliteConfig(root, configPath, server) {
 }
 
 function resolveRendererAdapters(root, renderers) {
-  return normalizeRendererAdapters(renderers).map((adapter) => ({
-    name: adapter.name,
-    clientImport: resolveImport(root, adapter.client),
-    staticImport: adapter.static ? resolveImport(root, adapter.static) : null,
-  }))
+  return normalizeRendererAdapters(renderers).map((adapter) => {
+    const clientImport = resolveImport(root, adapter.client)
+
+    return {
+      name: adapter.name,
+      clientImport: isBareImportSpecifier(adapter.client) ? adapter.client : clientImport,
+      staticImport: adapter.static ? resolveImport(root, adapter.static) : null,
+    }
+  })
 }
 
 function normalizeRendererAdapters(renderers) {
@@ -356,10 +361,6 @@ function isProjectFile(root, file) {
 
 function normalizeFrontmatter(value) {
   return isRecord(value) ? value : {}
-}
-
-function isRecord(value) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function formatFunctionExport(source) {

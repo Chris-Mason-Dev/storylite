@@ -1,6 +1,9 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { isValidAttributeName, renderAttrs } from '../src/lib/storylite/utils.js'
+
+export { escapeAttribute, escapeHtml, renderAttrs } from '../src/lib/storylite/utils.js'
 
 export const defaultBrandMarkHtml =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>'
@@ -436,30 +439,6 @@ export function transformManagerHtml(html, manager) {
   )
 }
 
-export function renderAttrs(attrs) {
-  return Object.entries(attrs ?? {})
-    .filter(([name]) => isValidAttributeName(name))
-    .map(([name, value]) => (value === true ? ` ${name}` : ` ${name}="${escapeAttribute(value)}"`))
-    .join('')
-}
-
-export function escapeAttribute(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
-export function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-}
-
 export function renderManagerDocumentHead(options = {}) {
   const includeDefaultTitle = options.includeDefaultTitle ?? true
   const tags = [
@@ -587,10 +566,6 @@ function replaceManagedHead(html, managerHeadHtml = '') {
     /<head>[\s\S]*?<\/head>/i,
     `<head>\n    ${renderManagerDocumentHead({ includeDefaultTitle: !hasProjectTitle })}\n  </head>`,
   )
-}
-
-function isValidAttributeName(name) {
-  return /^[^\s"'<>/=]+$/.test(name)
 }
 
 function escapeRegExp(value) {

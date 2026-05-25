@@ -5,6 +5,15 @@ import { pathToFileURL } from 'node:url'
 import fg from 'fast-glob'
 import { createServer } from 'vite'
 import { fileUrl, storyPagePath } from './project-graph.mjs'
+import {
+  escapeAttribute,
+  escapeHtml,
+  isNodeLike,
+  isPrimitive,
+  isRecord,
+  kebabCase,
+  renderAttrs,
+} from '../src/lib/storylite/utils.js'
 
 const reservedExports = new Set(['default', '__esModule'])
 const appHeadMarker = '<!--app-head-->'
@@ -527,48 +536,8 @@ function collectCss(story) {
   return typeof css === 'string' ? css : (css?.join('\n\n') ?? '')
 }
 
-function renderAttrs(attrs) {
-  return Object.entries(attrs ?? {})
-    .filter(([, value]) => value !== false && value !== null && value !== undefined)
-    .map(([name, value]) => (value === true ? ` ${name}` : ` ${name}="${escapeAttribute(value)}"`))
-    .join('')
-}
-
 function relativeUrl(base, fallback) {
   return base === './' ? fallback : base
-}
-
-function isRecord(value) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isNodeLike(value) {
-  return isRecord(value) && typeof value.nodeType === 'number'
-}
-
-function isPrimitive(value) {
-  return ['string', 'number', 'boolean'].includes(typeof value)
-}
-
-function kebabCase(value) {
-  return String(value)
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .toLowerCase()
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-}
-
-function escapeAttribute(value) {
-  return escapeHtml(value).replaceAll('`', '&#96;')
 }
 
 function injectManagerCss(html, css) {

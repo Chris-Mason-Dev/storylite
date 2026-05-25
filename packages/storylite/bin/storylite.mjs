@@ -6,6 +6,7 @@ import { parseArgs } from 'node:util'
 import { createServer, build, preview } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { transformManagerHtml } from './customization.mjs'
+import { isBareImportSpecifier } from '../src/lib/storylite/utils.js'
 import {
   createProjectGraph,
   generateProjectModuleCode,
@@ -64,6 +65,7 @@ if (command === 'dev') {
     root: appRoot,
     publicDir: manifest.publicDir,
     plugins: [svelte(), ...vitePlugins, storylitePlugin(projectRoot, graph)],
+    optimizeDeps: createDependencyOptimizationConfig(manifest),
     server: {
       port,
       host,
@@ -299,4 +301,26 @@ async function loadVitePlugins(root, context) {
   const projectPlugins = await resolveStoryliteProjectPlugins(config, resolvedContext)
   const rendererPlugins = await resolveStoryliteRendererPlugins(config, resolvedContext)
   return [...projectPlugins, ...rendererPlugins]
+}
+
+function createDependencyOptimizationConfig(manifest) {
+  const include = collectDependencyOptimizationIncludes(manifest)
+
+  return include.length ? { entries: [], include } : { entries: [] }
+}
+
+function collectDependencyOptimizationIncludes(manifest) {
+  const specifiers = new Set()
+
+  for (const adapter of manifest.rendererAdapters) {
+    addBareImportSpecifier(specifiers, adapter.clientImport)
+  }
+
+  return Array.from(specifiers).sort()
+}
+
+function addBareImportSpecifier(specifiers, specifier) {
+  if (typeof specifier === 'string' && isBareImportSpecifier(specifier)) {
+    specifiers.add(specifier)
+  }
 }
