@@ -69,6 +69,7 @@ export async function loadManifest(root, server = null) {
   const config = await loadStoryliteProjectConfig(root, server, configPath)
   const storyFiles = await resolveStoryFiles(root, config.stories ?? defaultConfig.stories)
   const cssFiles = resolveFiles(root, config.css ?? [])
+  const publicDir = resolvePublicDir(root, config.publicDir)
   const setupFile = config.setup ? resolveFile(root, config.setup) : null
   const rendererAdapters = resolveRendererAdapters(root, config.renderers ?? [])
   const storyIdResolver = typeof config.storyId === 'function' ? config.storyId : null
@@ -80,6 +81,7 @@ export async function loadManifest(root, server = null) {
     configPath,
     storyFiles,
     cssFiles,
+    publicDir,
     setupFile,
     rendererAdapters,
     storyIdResolver,
@@ -305,6 +307,14 @@ async function resolveStoryFiles(root, patterns) {
 
 function resolveFiles(root, files) {
   return files.map((file) => resolveFile(root, file))
+}
+
+export function resolvePublicDir(root, publicDir = 'public') {
+  if (publicDir === false) {
+    return false
+  }
+
+  return resolveFile(root, typeof publicDir === 'string' && publicDir.trim() ? publicDir : 'public')
 }
 
 function resolveFile(root, file) {

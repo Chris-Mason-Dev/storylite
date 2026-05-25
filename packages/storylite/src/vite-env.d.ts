@@ -24,6 +24,7 @@ declare module 'virtual:storylite/project' {
     readonly brand: {
       readonly markHtml: string
       readonly titleHtml: string
+      readonly subtitle: string | null
     }
     readonly backgrounds: readonly StoryLiteBackgroundPreset[]
     readonly viewports: readonly ViewportPreset[]

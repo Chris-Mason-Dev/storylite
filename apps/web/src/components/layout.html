@@ -1,14 +1,29 @@
-<section class="demo-layout" aria-label="HTML component story sample">
-  <article>
-    <h3>{{ first }}</h3>
-    <p>Group examples by component, variant, or product workflow.</p>
-  </article>
-  <article>
-    <h3>{{ second }}</h3>
-    <p>Expose args through controls while keeping stories easy to read.</p>
-  </article>
-  <article>
-    <h3>{{ third }}</h3>
-    <p>Add React, Svelte, Vue, or Solid only where a project needs it.</p>
-  </article>
+<section class="demo-shell" aria-label="StoryLite project overview">
+  <aside class="demo-shell__nav" aria-label="Project sections">
+    <strong>{{ project }}</strong>
+    <a href="#overview" aria-current="page">Overview</a>
+    <a href="#stories">Stories</a>
+    <a href="#builds">Static builds</a>
+  </aside>
+  <main class="demo-shell__main" id="overview">
+    <header>
+      <p class="eyebrow">{{ eyebrow }}</p>
+      <h2>{{ headline }}</h2>
+    </header>
+    <div class="demo-metrics" aria-label="Project metrics">
+      <article>
+        <span>{{ storyCount }}</span>
+        <p>stories in this package</p>
+      </article>
+      <article>
+        <span>{{ rendererCount }}</span>
+        <p>renderer modes covered</p>
+      </article>
+    </div>
+    <ol class="demo-checklist" aria-label="Release checklist">
+      <li>Typecheck package stories</li>
+      <li>Build static StoryLite output</li>
+      <li>Verify HTML and web component previews</li>
+    </ol>
+  </main>
 </section>

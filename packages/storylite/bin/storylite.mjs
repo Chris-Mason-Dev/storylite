@@ -53,6 +53,8 @@ const port = readPortOption()
 const host = readHostOption(command === 'preview')
 
 if (command === 'dev') {
+  const graph = createProjectGraph(projectRoot)
+  const manifest = await graph.load()
   const vitePlugins = await loadVitePlugins(projectRoot, {
     command: 'serve',
     target: 'manager',
@@ -60,7 +62,8 @@ if (command === 'dev') {
   const server = await createServer({
     configFile: false,
     root: appRoot,
-    plugins: [svelte(), ...vitePlugins, storylitePlugin(projectRoot)],
+    publicDir: manifest.publicDir,
+    plugins: [svelte(), ...vitePlugins, storylitePlugin(projectRoot, graph)],
     server: {
       port,
       host,
@@ -74,6 +77,7 @@ if (command === 'dev') {
   server.bindCLIShortcuts({ print: true })
 } else if (command === 'build') {
   const graph = createProjectGraph(projectRoot)
+  const manifest = await graph.load()
   const managerPlugins = await loadVitePlugins(projectRoot, {
     command: 'build',
     target: 'manager',
@@ -90,6 +94,7 @@ if (command === 'dev') {
     configFile: false,
     root: appRoot,
     base,
+    publicDir: manifest.publicDir,
     plugins: [svelte(), ...managerPlugins, storylitePlugin(projectRoot, graph)],
     build: {
       outDir,
@@ -101,6 +106,7 @@ if (command === 'dev') {
     configFile: false,
     root: appRoot,
     base,
+    publicDir: false,
     plugins: [
       svelte(),
       ...prerenderPlugins,
@@ -133,7 +139,6 @@ if (command === 'dev') {
     managerCss: (await graph.load()).ui.css,
   })
 
-  const manifest = await graph.load()
   const staticPlugins = await loadVitePlugins(projectRoot, {
     command: 'build',
     target: 'static',

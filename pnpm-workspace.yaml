@@ -20,5 +20,4 @@ allowBuilds:
   msw: true
 
 overrides:
-  '@types/node': '^24'
   'chokidar': '^5.0.0'

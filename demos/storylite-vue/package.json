@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=4105 storylite dev",
-    "demo": "vite --port ${PORT:-4105}",
     "build": "storylite build",
     "preview": "storylite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -22,7 +21,6 @@
     "@tailwindcss/vite": "^4.3.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.14",
     "vitest": "^4.1.7"
   }
 }

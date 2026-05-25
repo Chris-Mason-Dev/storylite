@@ -7,6 +7,7 @@ import {
   generateProjectModuleCode,
   loadManifest,
   parseHomeMarkdown,
+  resolvePublicDir,
   resolveStoryliteProjectPlugins,
   storyPagePath,
 } from '../../../bin/project-graph.mjs'
@@ -120,6 +121,34 @@ Use **StoryLite** with \`home.md\`.
     }
   })
 
+  it('resolves project public assets from public/ by default', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-public-dir-'))
+    const storyliteDir = join(root, '.storylite')
+    await mkdir(storyliteDir)
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: [],
+        }`,
+      )
+
+      const manifest = await loadManifest(root)
+
+      expect(manifest.publicDir).toBe(join(root, 'public'))
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
+  it('supports disabling or relocating project public assets', () => {
+    expect(resolvePublicDir('/project', false)).toBe(false)
+    expect(resolvePublicDir('/project', './.storylite/public')).toBe(
+      join('/project', '.storylite/public'),
+    )
+  })
+
   it('generates base-path-safe static story page paths', () => {
     expect(storyPagePath('components-button--primary')).toBe(
       'stories/components-button--primary/index.html',
@@ -210,6 +239,7 @@ Use **StoryLite** with \`home.md\`.
       projectRoot: root,
       storyFiles: [],
       cssFiles: [cssFile],
+      publicDir: false,
       setupFile: null,
       rendererAdapters: [],
       storyIdResolverSource: null,

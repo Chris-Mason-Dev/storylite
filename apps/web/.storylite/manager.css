@@ -1,5 +1,0 @@
-.brand__title strong::after {
-  content: ' demo';
-  color: var(--sl-muted);
-  font-size: 0.72em;
-}

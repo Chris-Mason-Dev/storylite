@@ -4,22 +4,30 @@ import type {
   StoryLiteRender,
   StoryLiteStoryDefinition,
 } from '@storylite/storylite'
+import css from '../styles.css?raw'
 import badgeHtml from './badge.html?raw'
 import buttonHtml from './button.html?raw'
 import cardHtml from './card.html?raw'
 import fieldHtml from './field.html?raw'
 import layoutHtml from './layout.html?raw'
-import css from '../styles.css?raw'
+
+const parameters: StoryLiteParameters = { css }
+
+export default {
+  title: 'CSS Demos',
+  parameters,
+} satisfies StoryLiteMeta
 
 type TemplateArgs = Record<string, string | number | boolean>
 
 type ButtonArgs = {
   label: string
-  variant: 'primary' | 'secondary' | 'danger'
+  variant: 'primary' | 'secondary' | 'quiet'
 }
 
 type CardArgs = {
   eyebrow: string
+  icon: string
   title: string
   body: string
   action: string
@@ -29,52 +37,62 @@ type FieldArgs = {
   label: string
   placeholder: string
   type: 'email' | 'text' | 'search'
+  hint: string
 }
 
 type BadgeArgs = {
   label: string
+  tone: 'stable' | 'new' | 'experimental'
 }
 
 type LayoutArgs = {
-  first: string
-  second: string
-  third: string
+  project: string
+  eyebrow: string
+  headline: string
+  storyCount: string
+  rendererCount: string
 }
-
-const parameters: StoryLiteParameters = { css }
-
-export default {
-  title: 'HTML/Components',
-  parameters,
-} satisfies StoryLiteMeta
 
 export const Button = {
   args: {
-    label: 'Save changes',
+    label: 'Run storylite build',
     variant: 'primary',
   },
   argTypes: {
     label: { control: 'text' },
-    variant: { control: 'select', options: ['primary', 'secondary', 'danger'] },
+    variant: { control: 'select', options: ['primary', 'secondary', 'quiet'] },
   },
   render: template(buttonHtml),
 } satisfies StoryLiteStoryDefinition<ButtonArgs>
 
+export const Badge = {
+  args: {
+    label: 'Built-in HTML renderer',
+    tone: 'stable',
+  },
+  argTypes: {
+    tone: { control: 'select', options: ['stable', 'new', 'experimental'] },
+  },
+  render: template(badgeHtml),
+} satisfies StoryLiteStoryDefinition<BadgeArgs>
+
 export const Card = {
   args: {
-    eyebrow: 'Example',
-    title: 'Layered component card',
-    body: 'A plain article element rendered as a StoryLite component story.',
-    action: 'Open',
+    eyebrow: 'Renderer coverage',
+    icon: 'HTML',
+    title: 'Start with portable markup',
+    body: 'Use plain HTML stories for design-system atoms, docs examples, and server-rendered fragments before adding a framework adapter.',
+    action: 'View adapter docs',
   },
   render: template(cardHtml),
 } satisfies StoryLiteStoryDefinition<CardArgs>
 
 export const Field = {
   args: {
-    label: 'Email address',
-    placeholder: 'hello@storylite.dev',
-    type: 'email',
+    label: 'Filter stories',
+    placeholder: 'Button, dropdown, shell...',
+    type: 'search',
+    hint: 'Useful for story catalogs with framework and HTML examples side by side.',
   },
   argTypes: {
     type: { control: 'select', options: ['email', 'text', 'search'] },
@@ -82,18 +100,13 @@ export const Field = {
   render: template(fieldHtml),
 } satisfies StoryLiteStoryDefinition<FieldArgs>
 
-export const Badge = {
-  args: {
-    label: 'Baseline 2025',
-  },
-  render: template(badgeHtml),
-} satisfies StoryLiteStoryDefinition<BadgeArgs>
-
 export const Layout = {
   args: {
-    first: 'Stories',
-    second: 'Controls',
-    third: 'Adapters',
+    project: 'StoryLite web',
+    eyebrow: 'Static preview',
+    headline: 'A compact project surface for reviewing stories before release',
+    storyCount: '9',
+    rendererCount: '2',
   },
   render: template(layoutHtml),
 } satisfies StoryLiteStoryDefinition<LayoutArgs>

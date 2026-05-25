@@ -1,6 +1,8 @@
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import fg from 'fast-glob'
 import { createServer } from 'vite'
 import { fileUrl, storyPagePath } from './project-graph.mjs'
 
@@ -74,6 +76,7 @@ export async function emitStaticStoryPages({
     const stories = await loadStaticStories(server, manifest)
     const staticRenderers = await loadStaticRenderers(server, manifest)
     const collisions = findStoryIdCollisions(stories)
+    const publicAssetPaths = await resolvePublicAssetPaths(manifest.publicDir)
 
     if (collisions.length) {
       throw new Error(formatStoryIdCollisionError(collisions))
@@ -83,7 +86,14 @@ export async function emitStaticStoryPages({
 
     await Promise.all(
       stories.map(async (story) => {
-        const html = await renderStaticStoryPage(story, manifest, css, base, staticRenderers)
+        const html = await renderStaticStoryPage(
+          story,
+          manifest,
+          css,
+          base,
+          staticRenderers,
+          publicAssetPaths,
+        )
         const path = resolve(outDir, storyPagePath(story.id))
         await mkdir(dirname(path), { recursive: true })
         await writeFile(path, html)
@@ -137,10 +147,53 @@ export async function loadCss(server, files) {
   return contents.join('\n\n')
 }
 
-async function renderStaticStoryPage(story, manifest, globalCss, base, staticRenderers) {
+async function renderStaticStoryPage(
+  story,
+  manifest,
+  globalCss,
+  base,
+  staticRenderers,
+  publicAssetPaths = new Set(),
+) {
+  const publicAssetFallbackBase = '../../'
   const title = `${story.title} - ${story.name}`
-  const storyCss = collectCss(story)
+  const storyCss = rewritePublicAssetUrls(
+    collectCss(story),
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
   const result = await renderStaticStory(story, staticRenderers)
+  const storyHtml = rewritePublicAssetUrls(
+    result.html,
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
+  const previewHeadHtml = rewritePublicAssetUrls(
+    manifest.preview.headHtml ?? '',
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
+  const previewBodyStartHtml = rewritePublicAssetUrls(
+    manifest.preview.bodyStartHtml ?? '',
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
+  const previewBodyEndHtml = rewritePublicAssetUrls(
+    manifest.preview.bodyEndHtml ?? '',
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
+  const previewGlobalCss = rewritePublicAssetUrls(
+    globalCss,
+    publicAssetPaths,
+    base,
+    publicAssetFallbackBase,
+  )
   const warning = result.warning
     ? `<p class="sl-static-warning">${escapeHtml(result.warning)}</p>`
     : ''
@@ -151,10 +204,10 @@ async function renderStaticStoryPage(story, manifest, globalCss, base, staticRen
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(title)}</title>
-    ${manifest.preview.headHtml ?? ''}
+    ${previewHeadHtml}
     <style>
       ${previewBaseCss()}
-      ${globalCss}
+      ${previewGlobalCss}
       ${storyCss}
       .sl-static-warning {
         margin: 0 0 1rem;
@@ -167,15 +220,121 @@ async function renderStaticStoryPage(story, manifest, globalCss, base, staticRen
     </style>
   </head>
   <body${renderAttrs(manifest.preview.bodyAttrs)}>
-    ${manifest.preview.bodyStartHtml ?? ''}
+    ${previewBodyStartHtml}
     <main id="ss-canvas">
       ${warning}
-      ${result.html}
+      ${storyHtml}
     </main>
-    ${manifest.preview.bodyEndHtml ?? ''}
+    ${previewBodyEndHtml}
     <p class="sl-static-back"><a href="${relativeUrl(base, '../../index.html')}">Back to StoryLite</a></p>
   </body>
 </html>`
+}
+
+async function resolvePublicAssetPaths(publicDir) {
+  if (!publicDir || !existsSync(publicDir)) {
+    return new Set()
+  }
+
+  const files = await fg('**/*', {
+    cwd: publicDir,
+    dot: true,
+    onlyFiles: true,
+  })
+
+  return new Set(files.map((file) => `/${file.replaceAll('\\', '/')}`))
+}
+
+export function rewritePublicAssetUrls(source, publicAssetPaths, base, fallbackBase) {
+  if (!source || publicAssetPaths.size === 0) {
+    return source
+  }
+
+  return rewriteCssAssetUrls(
+    rewriteHtmlAssetUrls(source, publicAssetPaths, base, fallbackBase),
+    publicAssetPaths,
+    base,
+    fallbackBase,
+  )
+}
+
+function rewriteHtmlAssetUrls(source, publicAssetPaths, base, fallbackBase) {
+  return source.replace(
+    /\b(href|src|poster|srcset)\s*=\s*(["'])(.*?)\2/gi,
+    (match, attribute, quote, value) => {
+      if (attribute.toLowerCase() === 'srcset') {
+        const rewritten = rewriteSrcset(value, publicAssetPaths, base, fallbackBase)
+        return rewritten === value ? match : `${attribute}=${quote}${rewritten}${quote}`
+      }
+
+      const rewritten = rewritePublicAssetUrl(value, publicAssetPaths, base, fallbackBase)
+      return rewritten === value ? match : `${attribute}=${quote}${rewritten}${quote}`
+    },
+  )
+}
+
+function rewriteCssAssetUrls(source, publicAssetPaths, base, fallbackBase) {
+  return source.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g, (match, quote, value) => {
+    const rewritten = rewritePublicAssetUrl(value, publicAssetPaths, base, fallbackBase)
+    return rewritten === value ? match : `url(${quote}${rewritten}${quote})`
+  })
+}
+
+function rewriteSrcset(value, publicAssetPaths, base, fallbackBase) {
+  return value
+    .split(',')
+    .map((candidate) => {
+      const trimmed = candidate.trim()
+      const [url, ...descriptor] = trimmed.split(/\s+/)
+
+      if (!url) {
+        return candidate
+      }
+
+      const rewritten = rewritePublicAssetUrl(url, publicAssetPaths, base, fallbackBase)
+      return [rewritten, ...descriptor].join(' ')
+    })
+    .join(', ')
+}
+
+function rewritePublicAssetUrl(value, publicAssetPaths, base, fallbackBase) {
+  const asset = normalizePublicAssetReference(value)
+
+  if (!asset || !publicAssetPaths.has(asset.path)) {
+    return value
+  }
+
+  return `${publicAssetBaseUrl(base, fallbackBase)}${asset.path.slice(1)}${asset.suffix}`
+}
+
+function normalizePublicAssetReference(value) {
+  if (
+    !value ||
+    value.startsWith('#') ||
+    value.startsWith('//') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(value)
+  ) {
+    return null
+  }
+
+  const match = value.match(/^([^?#]*)([?#].*)?$/)
+  const rawPath = match?.[1] ?? ''
+  const suffix = match?.[2] ?? ''
+  const path = rawPath.startsWith('./')
+    ? `/${rawPath.slice(2)}`
+    : rawPath.startsWith('/')
+      ? rawPath
+      : null
+
+  return path ? { path, suffix } : null
+}
+
+function publicAssetBaseUrl(base, fallbackBase) {
+  if (base === './') {
+    return fallbackBase
+  }
+
+  return base.endsWith('/') ? base : `${base}/`
 }
 
 async function renderStaticStory(story, staticRenderers) {

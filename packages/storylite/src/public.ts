@@ -45,6 +45,7 @@ export type StoryLiteHtmlFragment = string | ((defaultHtml: string) => string)
 export type StoryLiteBrandConfig = {
   readonly markHtml?: string
   readonly titleHtml?: string
+  readonly subtitle?: string
 }
 
 export type StoryLiteIconName =
@@ -165,6 +166,7 @@ export type StoryLiteConfig = {
   readonly stories: readonly string[]
   readonly css?: readonly string[]
   readonly home?: string
+  readonly publicDir?: string | false
   readonly vitePlugins?: StoryLiteVitePluginsConfig
   readonly setup?: string
   readonly renderers?: readonly StoryLiteRendererAdapter[]

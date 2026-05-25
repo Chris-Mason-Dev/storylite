@@ -42,6 +42,25 @@ describe('storylite customization', () => {
       expect(customization.projectUi.css).toContain('.manager-file')
       expect(customization.projectUi.css).toContain('.ui-file')
       expect(customization.projectUi.css).toContain('.config-css')
+      expect(customization.projectUi.brand.subtitle).toBeNull()
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
+  it('allows configuring the sidebar brand subtitle', async () => {
+    const root = await createProjectFixture({})
+
+    try {
+      const customization = await resolveStoryliteCustomization(root, {
+        ui: {
+          brand: {
+            subtitle: 'Component workbench',
+          },
+        },
+      })
+
+      expect(customization.projectUi.brand.subtitle).toBe('Component workbench')
     } finally {
       await rm(root, { force: true, recursive: true })
     }

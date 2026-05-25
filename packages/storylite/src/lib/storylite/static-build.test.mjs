@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
-import { injectPrerenderedAppHtml, loadCss } from '../../../bin/static-build.mjs'
+import {
+  injectPrerenderedAppHtml,
+  loadCss,
+  rewritePublicAssetUrls,
+} from '../../../bin/static-build.mjs'
 
 describe('storylite static build', () => {
   it('injects prerendered manager head and html into the built shell', () => {
@@ -64,5 +68,42 @@ describe('storylite static build', () => {
       await server.close()
       await rm(root, { force: true, recursive: true })
     }
+  })
+
+  it('rewrites public asset URLs for nested static story pages', () => {
+    const publicAssets = new Set(['/favicon.ico', '/images/logo.png', '/fonts/ui.woff2'])
+    const html = [
+      '<link rel="icon" href="/favicon.ico">',
+      '<img src="./images/logo.png?size=2x">',
+      '<img srcset="/images/logo.png 1x, /missing.png 2x">',
+      '<a href="/docs">Docs</a>',
+      '<style>@font-face { src: url("/fonts/ui.woff2"); }</style>',
+    ].join('')
+
+    expect(rewritePublicAssetUrls(html, publicAssets, './', '../../')).toContain(
+      'href="../../favicon.ico"',
+    )
+    expect(rewritePublicAssetUrls(html, publicAssets, './', '../../')).toContain(
+      'src="../../images/logo.png?size=2x"',
+    )
+    expect(rewritePublicAssetUrls(html, publicAssets, './', '../../')).toContain(
+      'srcset="../../images/logo.png 1x, /missing.png 2x"',
+    )
+    expect(rewritePublicAssetUrls(html, publicAssets, './', '../../')).toContain('href="/docs"')
+    expect(rewritePublicAssetUrls(html, publicAssets, './', '../../')).toContain(
+      'url("../../fonts/ui.woff2")',
+    )
+  })
+
+  it('rewrites public asset URLs with configured base paths', () => {
+    const publicAssets = new Set(['/favicon.ico', '/images/logo.png'])
+    const html = '<link rel="icon" href="/favicon.ico"><img src="./images/logo.png">'
+
+    expect(rewritePublicAssetUrls(html, publicAssets, '/storylite/', '../../')).toContain(
+      'href="/storylite/favicon.ico"',
+    )
+    expect(rewritePublicAssetUrls(html, publicAssets, '/storylite/', '../../')).toContain(
+      'src="/storylite/images/logo.png"',
+    )
   })
 })

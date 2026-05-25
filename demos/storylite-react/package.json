@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=4103 storylite dev",
-    "demo": "vite --port ${PORT:-4103}",
     "build": "storylite build",
     "preview": "storylite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -23,7 +22,6 @@
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.14",
     "vitest": "^4.1.7"
   }
 }

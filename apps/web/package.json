@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=3993 storylite dev",
-    "demo": "vite --port ${PORT:-3993}",
     "build": "storylite build",
     "build:pages": "storylite build --base /storylite/",
     "preview": "storylite preview",
@@ -17,8 +16,8 @@
     "@storylite/storylite": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^25.9.1",
     "typescript": "^6.0.3",
-    "vite": "^8.0.14",
     "vitest": "^4.1.7"
   }
 }

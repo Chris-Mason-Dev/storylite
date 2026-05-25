@@ -44,6 +44,7 @@
   let collapsedGroups: Record<string, boolean> = $state({})
 
   const hasSearchQuery = $derived(searchQuery.trim().length > 0)
+  const brandSubtitle = $derived(projectUi.brand.subtitle ?? `${stories.length} stories`)
 
   function isGroupExpanded(title: string): boolean {
     return hasSearchQuery || !collapsedGroups[title]
@@ -121,7 +122,7 @@
     <div class="brand__mark" aria-hidden="true">{@html projectUi.brand.markHtml}</div>
     <div class="brand__content">
       <div class="brand__title">{@html projectUi.brand.titleHtml}</div>
-      <span>{stories.length} stories</span>
+      <span>{brandSubtitle}</span>
     </div>
     <button
       type="button"
@@ -215,7 +216,6 @@
                   onclick={() => onSelectStory(story)}
                 >
                   <span>{story.name}</span>
-                  <small>{story.renderer}</small>
                 </button>
               {/each}
             </div>

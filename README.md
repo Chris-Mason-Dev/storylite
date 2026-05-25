@@ -188,19 +188,44 @@ export default defineConfig({
 
 ### Core Options
 
-| Option                       | Description                                                                                    |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| `stories`                    | Glob patterns for story modules. Required.                                                     |
-| `css`                        | Shared CSS files injected into the preview iframe and static story pages.                      |
-| `home`                       | Inline Markdown source for the home page. Overrides `.storylite/home.md` when set.             |
-| `setup`                      | Optional module exporting `setupPreview(window)` for preview setup.                            |
-| `renderers`                  | Optional renderer adapters, such as `react()`, `svelte()`, `vue()`, or `solid()`.              |
-| `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms. |
-| `storyId(path, suggestedId)` | Optional story ID rewrite hook.                                                                |
+| Option                       | Description                                                                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `stories`                    | Glob patterns for story modules. Required.                                                                                  |
+| `css`                        | Shared CSS files injected into the preview iframe and static story pages.                                                   |
+| `home`                       | Inline Markdown source for the home page. Overrides `.storylite/home.md` when set.                                          |
+| `publicDir`                  | Static asset directory served at `/` in dev and copied into `dist-storylite`. Defaults to `public`. Set `false` to disable. |
+| `setup`                      | Optional module exporting `setupPreview(window)` for preview setup.                                                         |
+| `renderers`                  | Optional renderer adapters, such as `react()`, `svelte()`, `vue()`, or `solid()`.                                           |
+| `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms.                              |
+| `storyId(path, suggestedId)` | Optional story ID rewrite hook.                                                                                             |
 
 Story IDs strip the leading `src/` segment by default. For example,
 `src/components/button.stories.ts` becomes `components-button--primary`. Duplicate IDs are shown in
 the dev UI and fail `storylite build`.
+
+## Public Assets
+
+Put static files that need stable names in `public/`. StoryLite serves them from `/` during
+`storylite dev` and copies them to the root of `dist-storylite` during `storylite build`:
+
+```txt
+public/favicon.ico
+public/robots.txt
+```
+
+Reference those files with root-relative URLs such as `/favicon.ico`. StoryLite keeps those URLs
+base-safe in built output. For example, `storylite build --base /docs/` rewrites matching public
+asset URLs in generated pages to `/docs/...`, while relative builds rewrite nested static story
+pages to paths such as `../../favicon.ico`.
+
+To use a different directory or disable public assets:
+
+```ts
+export default defineConfig({
+  publicDir: './.storylite/public',
+  // publicDir: false,
+})
+```
 
 ## Project CSS
 
@@ -480,6 +505,7 @@ export default defineConfig({
     brand: {
       markHtml: '<span>UI</span>',
       titleHtml: '<strong>Design System</strong>',
+      subtitle: 'Component workbench',
     },
     backgrounds: (defaults) => [...defaults, { label: 'Brand', value: '#eff6ff' }],
     viewports: (defaults) =>
@@ -491,13 +517,17 @@ export default defineConfig({
 })
 ```
 
-| Option            | Description                                     |
-| ----------------- | ----------------------------------------------- |
-| `brand.markHtml`  | Trusted project HTML for the sidebar mark.      |
-| `brand.titleHtml` | Trusted project HTML for the sidebar title.     |
-| `backgrounds`     | Replace or extend preview background presets.   |
-| `viewports`       | Replace or extend toolbar viewport presets.     |
-| `css`             | CSS injected into the StoryLite manager chrome. |
+| Option            | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `brand.markHtml`  | Trusted project HTML for the sidebar mark.                                  |
+| `brand.titleHtml` | Trusted project HTML for the sidebar title.                                 |
+| `brand.subtitle`  | Plain text for the subtitle below the title. Defaults to `<count> stories`. |
+| `backgrounds`     | Replace or extend preview background presets.                               |
+| `viewports`       | Replace or extend toolbar viewport presets.                                 |
+| `css`             | CSS injected into the StoryLite manager chrome.                             |
+
+`brand.subtitle` is rendered as text. Use `brand.markHtml` and `brand.titleHtml` only for trusted
+project-source HTML.
 
 Viewport widths can be numbers or strings. Numeric widths are normalized to pixels. The built-in
 grid background can be tuned with preview CSS variables:
