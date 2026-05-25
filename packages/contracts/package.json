@@ -2,6 +2,16 @@
   "name": "@storylite/contracts",
   "version": "1.1.0",
   "description": "Shared StoryLite contracts for the app, renderer adapters, and downstream projects.",
+  "homepage": "https://itsjavi.com/storylite",
+  "bugs": {
+    "url": "https://github.com/itsjavi/storylite/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsjavi/storylite.git",
+    "directory": "packages/contracts"
+  },
   "files": [
     "dist"
   ],
