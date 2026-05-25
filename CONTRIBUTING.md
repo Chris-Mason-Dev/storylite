@@ -74,6 +74,20 @@ pnpm -F @storylite/web run test
 pnpm -F @storylite/storylite run typecheck
 ```
 
+## Publishing
+
+Create a single release version commit and tag from the root:
+
+```sh
+pnpm pkg:version patch
+pnpm pkg:version minor
+pnpm pkg:version major
+pnpm pkg:version 1.2.3
+```
+
+The command runs `pnpm version` in `@storylite/storylite`, then syncs the resolved version to the
+other public packages before pnpm creates the release commit and tag.
+
 ## Commits
 
 Use Conventional Commit messages:

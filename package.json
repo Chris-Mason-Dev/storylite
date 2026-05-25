@@ -32,7 +32,7 @@
     "typecheck": "pnpm -r --if-present --parallel --stream run typecheck",
     "update-deps": "pnpm -r update --latest && sleep 2 && pnpm install",
     "pkg:release": "pnpm -r --filter \"./packages/*\" publish --access public",
-    "pkg:version-set": "pnpm -r --filter \"./packages/*\" version --no-git-tag-version --no-commit-hooks --no-publish"
+    "pkg:version": "node ./scripts/pkg-version.mjs"
   },
   "devDependencies": {
     "oxfmt": "^0.51.0",

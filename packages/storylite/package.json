@@ -23,7 +23,8 @@
     "typecheck": "pnpm check",
     "publint": "publint",
     "prepublishOnly": "pnpm typecheck && pnpm build && pnpm publint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "version": "node ../../scripts/sync-public-package-versions.mjs --stage"
   },
   "dependencies": {
     "@lucide/svelte": "^1.16.0",
