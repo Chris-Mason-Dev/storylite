@@ -54,28 +54,37 @@
       {#each activeArgNames as name (name)}
         {@const type = controlType(name)}
         {@const metadata = argType(name)}
-        <label class="control">
-          <span>{name}</span>
-
+        <label class="control" class:control--boolean={type === 'boolean'}>
           {#if type === 'boolean'}
             <input
               type="checkbox"
               checked={Boolean(activeArgs[name])}
               onchange={(event) => onUpdateArg(name, event.currentTarget.checked)}
             />
+            <span>{name}</span>
+          {:else if type === 'textarea'}
+            <span>{name}</span>
+            <textarea
+              rows="4"
+              value={String(activeArgs[name] ?? '')}
+              oninput={(event) => onUpdateArg(name, event.currentTarget.value)}
+            ></textarea>
           {:else if type === 'number'}
+            <span>{name}</span>
             <input
               type="number"
               value={Number(activeArgs[name] ?? 0)}
               oninput={(event) => onUpdateArg(name, event.currentTarget.valueAsNumber)}
             />
           {:else if type === 'color'}
+            <span>{name}</span>
             <input
               type="color"
               value={String(activeArgs[name] ?? '#000000')}
               oninput={(event) => onUpdateArg(name, event.currentTarget.value)}
             />
           {:else if type === 'select' && metadata?.options}
+            <span>{name}</span>
             <select
               value={String(activeArgs[name] ?? '')}
               onchange={(event) => onUpdateArg(name, event.currentTarget.value)}
@@ -85,6 +94,7 @@
               {/each}
             </select>
           {:else}
+            <span>{name}</span>
             <input
               type="text"
               value={String(activeArgs[name] ?? '')}

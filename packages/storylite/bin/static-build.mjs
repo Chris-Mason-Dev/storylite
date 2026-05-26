@@ -103,19 +103,17 @@ async function loadStaticStories(server, manifest) {
   const entries = await Promise.all(
     manifest.storyFiles.map(async (file) => {
       const module = await server.ssrLoadModule(fileUrl(file))
+      const importPath = relative(manifest.projectRoot, file).replaceAll('\\', '/')
       return normalizeStoryModule(
-        relative(manifest.projectRoot, file),
+        importPath,
         module,
         manifest.storyIdResolver,
+        manifest.storyExportNamesByFile?.[importPath],
       )
     }),
   )
 
-  return entries
-    .flat()
-    .sort(
-      (left, right) => left.title.localeCompare(right.title) || left.name.localeCompare(right.name),
-    )
+  return entries.flat()
 }
 
 export async function loadCss(server, files) {
@@ -377,12 +375,12 @@ function resolveStaticRenderer(module, renderer) {
   throw new Error(`Renderer adapter "${renderer}" does not export a static renderStory function.`)
 }
 
-function normalizeStoryModule(importPath, module, resolveId) {
+function normalizeStoryModule(importPath, module, resolveId, exportNames = []) {
   const meta = isRecord(module.default) ? module.default : {}
   const stories = []
   const title = typeof meta.title === 'string' && meta.title.trim() ? meta.title.trim() : 'Stories'
 
-  for (const [exportName, value] of Object.entries(module)) {
+  for (const [exportName, value] of orderedStoryModuleEntries(module, exportNames)) {
     if (reservedExports.has(exportName)) {
       continue
     }
@@ -414,6 +412,28 @@ function normalizeStoryModule(importPath, module, resolveId) {
   }
 
   return stories
+}
+
+function orderedStoryModuleEntries(module, exportNames = []) {
+  const entries = []
+  const seen = new Set()
+
+  for (const exportName of exportNames) {
+    if (seen.has(exportName) || reservedExports.has(exportName) || !(exportName in module)) {
+      continue
+    }
+
+    entries.push([exportName, module[exportName]])
+    seen.add(exportName)
+  }
+
+  for (const [exportName, value] of Object.entries(module)) {
+    if (!seen.has(exportName)) {
+      entries.push([exportName, value])
+    }
+  }
+
+  return entries
 }
 
 function renderWebComponentStory(story) {

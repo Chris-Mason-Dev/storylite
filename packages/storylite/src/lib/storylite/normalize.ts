@@ -17,22 +17,28 @@ import { isRecord, kebabCase } from './utils.js'
 
 const reservedExports = new Set(['default', '__esModule'])
 
+type StoryNormalizationOptions = StoryIdOptions & {
+  readonly exportNames?: readonly string[]
+  readonly exportNamesByImportPath?: Record<string, readonly string[]>
+}
+
 export function normalizeStoryModules(
   modules: Record<string, StoryModule>,
-  options: StoryIdOptions = {},
+  options: StoryNormalizationOptions = {},
 ): readonly StoryLiteStory[] {
   return normalizeStoryModulesWithDiagnostics(modules, options).stories
 }
 
 export function normalizeStoryModulesWithDiagnostics(
   modules: Record<string, StoryModule>,
-  options: StoryIdOptions = {},
+  options: StoryNormalizationOptions = {},
 ): StoryNormalizationResult {
-  const stories = Object.entries(modules)
-    .flatMap(([importPath, module]) => normalizeStoryModule(importPath, module, options))
-    .sort(
-      (left, right) => left.title.localeCompare(right.title) || left.name.localeCompare(right.name),
-    )
+  const stories = Object.entries(modules).flatMap(([importPath, module]) =>
+    normalizeStoryModule(importPath, module, {
+      ...options,
+      exportNames: options.exportNamesByImportPath?.[importPath] ?? options.exportNames,
+    }),
+  )
 
   return {
     stories,
@@ -43,13 +49,13 @@ export function normalizeStoryModulesWithDiagnostics(
 export function normalizeStoryModule(
   importPath: string,
   module: StoryModule,
-  options: StoryIdOptions = {},
+  options: StoryNormalizationOptions = {},
 ): readonly StoryLiteStory[] {
   const meta = isRecord(module.default) ? (module.default as StoryMeta) : {}
   const title = normalizeTitle(meta.title, importPath)
   const stories: StoryLiteStory[] = []
 
-  for (const [exportName, value] of Object.entries(module)) {
+  for (const [exportName, value] of orderedStoryModuleEntries(module, options.exportNames)) {
     if (reservedExports.has(exportName)) {
       continue
     }
@@ -98,7 +104,7 @@ export function groupStories(stories: readonly StoryLiteStory[]): readonly Story
 
   return Array.from(groups.entries()).map(([title, group]) => ({
     title,
-    stories: group.sort((left, right) => left.name.localeCompare(right.name)),
+    stories: group,
   }))
 }
 
@@ -191,6 +197,31 @@ function normalizeStoryExport(value: unknown): StoryExport | null {
   }
 
   return value as StoryExport
+}
+
+function orderedStoryModuleEntries(
+  module: StoryModule,
+  exportNames: readonly string[] = [],
+): [string, unknown][] {
+  const entries: [string, unknown][] = []
+  const seen = new Set<string>()
+
+  for (const exportName of exportNames) {
+    if (seen.has(exportName) || reservedExports.has(exportName) || !(exportName in module)) {
+      continue
+    }
+
+    entries.push([exportName, module[exportName]])
+    seen.add(exportName)
+  }
+
+  for (const [exportName, value] of Object.entries(module)) {
+    if (!seen.has(exportName)) {
+      entries.push([exportName, value])
+    }
+  }
+
+  return entries
 }
 
 function normalizeTitle(title: string | undefined, importPath: string): string {

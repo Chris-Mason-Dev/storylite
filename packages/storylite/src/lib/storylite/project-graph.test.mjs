@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
 import {
+  extractStoryExportNames,
   generateProjectModuleCode,
   loadManifest,
   parseHomeMarkdown,
@@ -13,6 +14,22 @@ import {
 } from '../../../bin/project-graph.mjs'
 
 describe('storylite project graph', () => {
+  it('extracts story export names in source order', async () => {
+    expect(
+      await extractStoryExportNames(
+        `
+        export const Zebra = { render: () => '<p>Zebra</p>' }
+        export function Alpha() {}
+        const localStory = { render: () => '<p>Middle</p>' }
+        export { localStory as Middle }
+        export type StoryArgs = { label: string }
+        export default { title: 'Demo' }
+      `,
+        'demo.stories.ts',
+      ),
+    ).toEqual(['Zebra', 'Alpha', 'Middle'])
+  })
+
   it('renders home markdown frontmatter and content', async () => {
     const home = await parseHomeMarkdown(`---
 title: Demo Home
@@ -76,6 +93,7 @@ Use **StoryLite** with \`home.md\`.
       const manifest = await loadManifest(root)
 
       expect(manifest.storyFiles).toHaveLength(1)
+      expect(manifest.storyExportNamesByFile).toEqual({ 'src/button.stories.ts': ['Button'] })
       expect(manifest.cssFiles).toHaveLength(1)
       expect(
         manifest.storyIdResolver('src/components/button.stories.ts', 'components-button--default'),
@@ -190,6 +208,9 @@ Use **StoryLite** with \`home.md\`.
           staticImport: `/@fs${join(storyliteDir, 'custom-static.ts')}`,
         },
       ])
+      expect(moduleCode).toContain(
+        'export const storyModuleExportNames = {"src/custom.stories.ts":["Custom"]};',
+      )
       expect(moduleCode).toContain('"custom": () => import(')
       expect(moduleCode).toContain('custom-client.ts')
     } finally {

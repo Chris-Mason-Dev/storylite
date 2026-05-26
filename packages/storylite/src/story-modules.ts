@@ -8,12 +8,14 @@ import {
   setupPreview,
   staticStoriesBase,
   storyIdResolver,
+  storyModuleExportNames,
   storyModules,
 } from 'virtual:storylite/project'
 import { normalizeStoryModulesWithDiagnostics } from './lib/storylite/normalize'
 
 const normalizedStories = normalizeStoryModulesWithDiagnostics(storyModules, {
   resolveId: storyIdResolver,
+  exportNamesByImportPath: storyModuleExportNames,
 })
 
 export const stories = normalizedStories.stories

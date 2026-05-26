@@ -9,7 +9,7 @@ export type StoryIdOptions = {
   readonly resolveId?: StoryIdResolver
 }
 
-export type StoryControlType = 'boolean' | 'text' | 'number' | 'color' | 'select'
+export type StoryControlType = 'boolean' | 'text' | 'textarea' | 'number' | 'color' | 'select'
 export type StoryControl = StoryControlType | { readonly type: StoryControlType }
 
 export type StoryArgType<TOption = unknown> = {

@@ -259,7 +259,7 @@ function previewBaseCss(options: PreviewOptions): string {
   background: ${options.background};
   --storylite-grid-size: 1rem;
   --storylite-grid-major-size: calc(var(--storylite-grid-size) * 8);
-  --storylite-grid-offset: var(--storylite-grid-size);
+  --storylite-grid-offset: 16px;
   --storylite-grid-line-width: 1px;
   --storylite-grid-line-color: rgb(130 130 130 / 35%);
   --storylite-grid-line-color-2: rgb(130 130 130 / 17.5%);

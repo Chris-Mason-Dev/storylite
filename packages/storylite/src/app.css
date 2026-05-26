@@ -781,16 +781,19 @@
   }
 
   .control input,
-  .control select {
+  .control select,
+  .control textarea {
     min-block-size: 32px;
     border: 1px solid var(--sl-border);
     border-radius: 7px;
     background: var(--sl-panel);
     color: var(--sl-text);
+    font: inherit;
   }
 
   .control input:focus-visible,
-  .control select:focus-visible {
+  .control select:focus-visible,
+  .control textarea:focus-visible {
     outline: 0;
     border-color: color-mix(in oklab, var(--sl-primary), transparent 30%);
     box-shadow: 0 0 0 2px var(--sl-primary-soft);
@@ -799,6 +802,13 @@
   .control input:not([type='checkbox']),
   .control select {
     padding-inline: 9px;
+  }
+
+  .control textarea {
+    min-block-size: 96px;
+    padding: 8px 9px;
+    line-height: 1.4;
+    resize: vertical;
   }
 
   .canvas-stage {
@@ -1110,6 +1120,12 @@
   .control {
     display: grid;
     gap: 6px;
+  }
+
+  .control--boolean {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
   }
 
   .control span {

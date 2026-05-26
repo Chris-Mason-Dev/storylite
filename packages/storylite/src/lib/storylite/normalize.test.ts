@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  groupStories,
   inferControlType,
   normalizeStoryModule,
   normalizeStoryModulesWithDiagnostics,
@@ -47,6 +48,39 @@ describe('normalizeStoryModule', () => {
     expect(stories.find((story) => story.exportName === 'MetaOnly')?.source).toBe(metaSource)
     expect(stories.find((story) => story.exportName === 'StoryOnly')?.source).toBe(storySource)
   })
+
+  it('preserves source export order when module namespace entries are sorted', () => {
+    const stories = normalizeStoryModule(
+      '../demo/button.stories.ts',
+      {
+        Alpha: { render: () => '<button>Alpha</button>' },
+        Middle: { render: () => '<button>Middle</button>' },
+        Zebra: { render: () => '<button>Zebra</button>' },
+      },
+      { exportNames: ['Zebra', 'Alpha', 'Middle'] },
+    )
+
+    expect(stories.map((story) => story.exportName)).toEqual(['Zebra', 'Alpha', 'Middle'])
+  })
+})
+
+describe('groupStories', () => {
+  it('keeps stories in normalized order within each group', () => {
+    const stories = normalizeStoryModule(
+      '../demo/button.stories.ts',
+      {
+        default: { title: 'CSS/Button' },
+        Alpha: { name: 'Alpha', render: () => '<button>Alpha</button>' },
+        Zebra: { name: 'Zebra', render: () => '<button>Zebra</button>' },
+      },
+      { exportNames: ['Zebra', 'Alpha'] },
+    )
+
+    expect(groupStories(stories)[0]?.stories.map((story) => story.exportName)).toEqual([
+      'Zebra',
+      'Alpha',
+    ])
+  })
 })
 
 describe('storyId', () => {
@@ -66,6 +100,21 @@ describe('storyId', () => {
 })
 
 describe('normalizeStoryModulesWithDiagnostics', () => {
+  it('keeps module order instead of sorting by title and story name', () => {
+    const result = normalizeStoryModulesWithDiagnostics({
+      'src/z.stories.ts': {
+        default: { title: 'Z' },
+        Last: { render: () => '<p>Last</p>' },
+      },
+      'src/a.stories.ts': {
+        default: { title: 'A' },
+        First: { render: () => '<p>First</p>' },
+      },
+    })
+
+    expect(result.stories.map((story) => story.exportName)).toEqual(['Last', 'First'])
+  })
+
   it('reports duplicate story ids', () => {
     const result = normalizeStoryModulesWithDiagnostics(
       {
@@ -94,6 +143,7 @@ describe('normalizeStoryModulesWithDiagnostics', () => {
 describe('inferControlType', () => {
   it('uses explicit controls before value inference', () => {
     expect(inferControlType({ control: { type: 'color' } }, '#fff')).toBe('color')
+    expect(inferControlType({ control: 'textarea' }, 'Line 1\nLine 2')).toBe('textarea')
     expect(inferControlType({ options: ['a', 'b'] }, 'a')).toBe('select')
     expect(inferControlType(undefined, true)).toBe('boolean')
   })

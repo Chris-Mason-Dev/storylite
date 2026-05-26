@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { isAbsolute, relative, resolve } from 'node:path'
 import fg from 'fast-glob'
-import { loadConfigFromFile } from 'vite'
+import { loadConfigFromFile, parseAst, transformWithOxc } from 'vite'
 import { resolveStoryliteCustomization } from './customization.mjs'
 import { parseMarkdown } from './markdown.mjs'
 import { isBareImportSpecifier, isRecord } from '../src/lib/storylite/utils.js'
@@ -68,6 +68,7 @@ export async function loadManifest(root, server = null) {
   const configPath = findConfigPath(root)
   const config = await loadStoryliteProjectConfig(root, server, configPath)
   const storyFiles = await resolveStoryFiles(root, config.stories ?? defaultConfig.stories)
+  const storyExportNamesByFile = await loadStoryExportNamesByFile(root, storyFiles)
   const cssFiles = resolveFiles(root, config.css ?? [])
   const publicDir = resolvePublicDir(root, config.publicDir)
   const setupFile = config.setup ? resolveFile(root, config.setup) : null
@@ -80,6 +81,7 @@ export async function loadManifest(root, server = null) {
     projectRoot: root,
     configPath,
     storyFiles,
+    storyExportNamesByFile,
     cssFiles,
     publicDir,
     setupFile,
@@ -169,6 +171,7 @@ export function generateProjectModuleCode(manifest, options = {}) {
               `${JSON.stringify(adapter.name)}: () => import(${JSON.stringify(adapter.clientImport)})`,
           )
           .join(',\n')
+  const storyModuleExportNames = JSON.stringify(manifest.storyExportNamesByFile ?? {})
 
   return `${storyImports}
 ${cssImports}
@@ -178,6 +181,7 @@ export const projectRoot = ${JSON.stringify(manifest.projectRoot)};
 export const storyModules = {
 ${storyMap}
 };
+export const storyModuleExportNames = ${storyModuleExportNames};
 export const globalCss = [${cssList}];
 export const setupPreview = importedSetupPreview;
 export const storyIdResolver = ${formatFunctionExport(manifest.storyIdResolverSource)};
@@ -290,6 +294,49 @@ async function resolveStoryFiles(root, patterns) {
   return matches.sort()
 }
 
+async function loadStoryExportNamesByFile(root, storyFiles) {
+  const entries = await Promise.all(
+    storyFiles.map(async (file) => [
+      relative(root, file).replaceAll('\\', '/'),
+      await extractStoryExportNames(await readFile(file, 'utf8'), file),
+    ]),
+  )
+
+  return Object.fromEntries(entries)
+}
+
+export async function extractStoryExportNames(source, file = 'story.stories.ts') {
+  let ast
+
+  try {
+    const transformed = await transformWithOxc(source, file, {
+      lang: oxcLanguageForFile(file),
+    })
+    ast = parseAst(transformed.code)
+  } catch {
+    return []
+  }
+
+  const names = []
+
+  for (const statement of ast.body) {
+    if (statement.type !== 'ExportNamedDeclaration') {
+      continue
+    }
+
+    if (statement.declaration) {
+      addDeclarationExportNames(names, statement.declaration)
+      continue
+    }
+
+    for (const specifier of statement.specifiers ?? []) {
+      addExportName(names, specifier.exported?.name)
+    }
+  }
+
+  return names
+}
+
 function resolveFiles(root, files) {
   return files.map((file) => resolveFile(root, file))
 }
@@ -337,6 +384,41 @@ function isProjectFile(root, file) {
     normalized.endsWith('.tsx') ||
     normalized.endsWith('.ts')
   )
+}
+
+function addDeclarationExportNames(names, declaration) {
+  if (declaration.type === 'VariableDeclaration') {
+    for (const declarator of declaration.declarations) {
+      addExportName(names, declarator.id?.name)
+    }
+    return
+  }
+
+  addExportName(names, declaration.id?.name)
+}
+
+function addExportName(names, name) {
+  if (!name || name === 'default' || names.includes(name)) {
+    return
+  }
+
+  names.push(name)
+}
+
+function oxcLanguageForFile(file) {
+  if (file.endsWith('.tsx')) {
+    return 'tsx'
+  }
+
+  if (file.endsWith('.jsx')) {
+    return 'jsx'
+  }
+
+  if (/\.[cm]?ts$/.test(file)) {
+    return 'ts'
+  }
+
+  return 'js'
 }
 
 function formatFunctionExport(source) {

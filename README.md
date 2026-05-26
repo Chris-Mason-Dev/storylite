@@ -429,6 +429,7 @@ Supported control types:
 
 - `boolean`
 - `text`
+- `textarea`
 - `number`
 - `color`
 - `select`
@@ -438,6 +439,7 @@ Controls can be declared as a string:
 ```ts
 argTypes: {
   disabled: { control: 'boolean' },
+  description: { control: 'textarea' },
 }
 ```
 

@@ -57,6 +57,7 @@ declare module 'virtual:storylite/project' {
 
   export const projectRoot: string
   export const storyModules: Record<string, StoryModule>
+  export const storyModuleExportNames: Record<string, readonly string[]>
   export const globalCss: readonly string[]
   export const setupPreview: ((window: Window) => void) | undefined
   export const storyIdResolver: StoryIdResolver | undefined
