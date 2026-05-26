@@ -26,6 +26,7 @@
     "preview:web": "pnpm build && pnpm -F @storylite/web run preview",
     "publint": "pnpm -r --if-present --stream run publint",
     "qa": "pnpm test:full-qa",
+    "smoke:react-downstream": "node ./scripts/smoke-react-downstream.mjs",
     "test": "pnpm -r --if-present --parallel --stream run test",
     "test:e2e": "pnpm -F @storylite/e2e run e2e",
     "test:full-qa": "pnpm typecheck && pnpm format:check && pnpm build && pnpm test && pnpm test:e2e",
