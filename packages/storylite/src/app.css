@@ -195,7 +195,7 @@
   .sidebar__body,
   .inspector__body {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .workspace__body {
@@ -336,7 +336,8 @@
   .story-group button:not(.story-group__toggle),
   .toolbar button,
   .brand__menu-button,
-  .inspector__header button {
+  .inspector__header button,
+  .inspector__copy-button {
     min-block-size: 32px;
     border: 1px solid transparent;
     border-radius: 7px;
@@ -357,12 +358,14 @@
   .story-group button:not(.story-group__toggle):hover:not(.active),
   .toolbar button:hover:not(.active),
   .brand__menu-button:hover,
-  .inspector__header button:hover {
+  .inspector__header button:hover,
+  .inspector__copy-button:hover {
     background: var(--sl-panel-subtle);
   }
 
   .story-group button:not(.story-group__toggle).active,
-  .toolbar button.active {
+  .toolbar button.active,
+  .inspector__copy-button.active {
     border-color: color-mix(in oklab, var(--sl-primary), transparent 35%);
     background: var(--sl-panel-subtle);
     color: var(--sl-primary);
@@ -465,6 +468,7 @@
   .toolbar button,
   .brand__menu-button,
   .inspector__header button,
+  .inspector__copy-button,
   .toolbar__icon-button {
     display: inline-grid;
     place-items: center;
@@ -1105,6 +1109,36 @@
 
   .controls {
     grid-row: 2;
+  }
+
+  .inspector__footer {
+    grid-row: 3;
+    display: flex;
+    justify-content: center;
+    padding: 12px 14px;
+    border-block-start: 1px solid var(--sl-border);
+  }
+
+  .inspector__copy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-block-size: 28px;
+    min-inline-size: 112px;
+    padding-block: 5px;
+    padding-inline: 10px;
+    border-color: var(--sl-border);
+    color: var(--sl-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .inspector__copy-button:hover,
+  .inspector__copy-button:focus-visible {
+    border-color: color-mix(in oklab, var(--sl-primary), transparent 35%);
+    color: var(--sl-primary);
   }
 
   .story-meta div {

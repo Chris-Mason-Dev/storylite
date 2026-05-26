@@ -5,6 +5,7 @@ import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
 import {
   extractStoryExportNames,
+  extractStorySourceMetadata,
   generateProjectModuleCode,
   loadManifest,
   parseHomeMarkdown,
@@ -28,6 +29,79 @@ describe('storylite project graph', () => {
         'demo.stories.ts',
       ),
     ).toEqual(['Zebra', 'Alpha', 'Middle'])
+  })
+
+  it('extracts source component metadata from story component declarations', () => {
+    expect(
+      extractStorySourceMetadata(
+        `
+        import { Button } from './Button'
+        import * as UI from './ui'
+
+        export default {
+          title: 'Demo',
+          component: UI.Card,
+        }
+
+        export const Primary = {
+          component: Button,
+          args: { label: 'Save' },
+        }
+
+        const Member = {
+          component: UI.Card,
+        }
+
+        export { Member }
+      `,
+        'demo.stories.tsx',
+      ),
+    ).toEqual({
+      metaComponentName: 'UI.Card',
+      storyComponentNames: {
+        Member: 'UI.Card',
+        Primary: 'Button',
+      },
+    })
+  })
+
+  it('extracts source component metadata from render JSX', () => {
+    expect(
+      extractStorySourceMetadata(
+        `
+        export const Card = {
+          render: (args) => <CardView eyebrow={args.eyebrow} />,
+        }
+
+        export function FunctionStory(args) {
+          return <UI.Card title={args.title} />
+        }
+      `,
+        'demo.stories.tsx',
+      ),
+    ).toEqual({
+      storyComponentNames: {
+        Card: 'CardView',
+        FunctionStory: 'UI.Card',
+      },
+    })
+  })
+
+  it('ignores unsupported dynamic source component expressions', () => {
+    expect(
+      extractStorySourceMetadata(
+        `
+        export const Dynamic = {
+          component: resolveComponent(),
+        }
+
+        export const Native = {
+          render: () => <button>Save</button>,
+        }
+      `,
+        'demo.stories.tsx',
+      ),
+    ).toEqual({})
   })
 
   it('renders home markdown frontmatter and content', async () => {
@@ -94,6 +168,7 @@ Use **StoryLite** with \`home.md\`.
 
       expect(manifest.storyFiles).toHaveLength(1)
       expect(manifest.storyExportNamesByFile).toEqual({ 'src/button.stories.ts': ['Button'] })
+      expect(manifest.storySourceMetadataByFile).toEqual({ 'src/button.stories.ts': {} })
       expect(manifest.cssFiles).toHaveLength(1)
       expect(
         manifest.storyIdResolver('src/components/button.stories.ts', 'components-button--default'),
@@ -210,6 +285,13 @@ Use **StoryLite** with \`home.md\`.
       ])
       expect(moduleCode).toContain(
         'export const storyModuleExportNames = {"src/custom.stories.ts":["Custom"]};',
+      )
+      expect(moduleCode).toContain(
+        'export const storySourceMetadata = {"src/custom.stories.ts":{}};',
+      )
+      expect(moduleCode).toContain('export const isStaticBuild = true;')
+      expect(generateProjectModuleCode(manifest, { serveManager: true })).toContain(
+        'export const isStaticBuild = false;',
       )
       expect(moduleCode).toContain('"custom": () => import(')
       expect(moduleCode).toContain('custom-client.ts')

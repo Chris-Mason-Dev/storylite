@@ -89,6 +89,7 @@ export type StoryLiteStory = {
   readonly parameters: StoryParameters
   readonly render?: StoryRender
   readonly source?: StorySourceSnippet
+  readonly sourceComponentName?: string
   readonly renderer: StoryLiteRenderer
 }
 

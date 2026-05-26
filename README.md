@@ -361,6 +361,9 @@ export default defineConfig({
 })
 ```
 
+You can register multiple adapters in one project; each story selects one renderer with
+`parameters.renderer`, while `html` and `web-components` remain available by default.
+
 Each adapter owns its client renderer, optional static renderer, and adapter-specific Vite plugins.
 Changing renderer adapters in `.storylite/config.ts` requires restarting `storylite dev`.
 
@@ -411,6 +414,7 @@ export const Primary = {
 | `args`       | Default story args.                                     |
 | `argTypes`   | Control metadata.                                       |
 | `parameters` | Default story parameters.                               |
+| `source`     | Optional code snippet override for the copy action.     |
 
 ### Named Story Exports
 
@@ -422,6 +426,36 @@ export const Primary = {
 | `argTypes`              | Arg types merged over default export arg types.     |
 | `parameters`            | Parameters merged over default export parameters.   |
 | `render(args, context)` | Story render function.                              |
+| `source`                | Optional story-specific code snippet override.      |
+
+### Source Snippets
+
+StoryLite can copy ready-to-use source snippets from the preview toolbar. It generates snippets
+automatically for stories with reliable source metadata, including web component stories with a tag
+name and framework stories that reference a component from the story source.
+
+When automatic generation is not enough, override the copied snippet with `source` on the default
+export or a named story. A story-level `source` takes precedence over a default export `source`.
+
+```ts
+export default {
+  title: 'Components/Button',
+  component: Button,
+  source: '<Button variant="primary">Save changes</Button>',
+} satisfies StoryLiteMeta<ButtonArgs>
+
+export const Primary = {
+  args: {
+    label: 'Save changes',
+    variant: 'primary',
+  },
+  source: (args) => `<Button variant="${args.variant}">${args.label}</Button>`,
+} satisfies StoryLiteStoryDefinition<ButtonArgs>
+```
+
+The `source` callback receives the current control values, so copied snippets can reflect modified
+args. If StoryLite cannot generate a reliable snippet and no `source` override is provided, the copy
+action is hidden.
 
 ### Controls
 

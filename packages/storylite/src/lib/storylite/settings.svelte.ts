@@ -25,7 +25,7 @@ export type StoryLiteSettingsOptions = {
 
 const appThemeStorageKey = 'storylite:app-theme'
 const toolbarStorageKey = 'storylite:toolbar-settings'
-export const storyliteZoomLevels = [50, 62.5, 75, 100, 112.5, 125, 150] as const
+export const storyliteZoomLevels = [50, 62.5, 75, 100, 112.5, 125, 150, 175, 200] as const
 let persistentCustomToolIds = new Set<string>()
 
 export const storyliteSettings = $state<StoryLiteSettings>({

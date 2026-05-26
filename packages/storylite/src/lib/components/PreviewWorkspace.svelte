@@ -28,6 +28,7 @@
     readonly previewHtml: PreviewHtmlOptions
     readonly setupPreview: ((window: Window) => void) | undefined
     readonly home: HomePage
+    readonly isStaticBuild: boolean
     readonly staticStoriesBase: string
     readonly viewports: readonly ViewportPreset[]
     readonly backgrounds: readonly StoryLiteBackgroundPreset[]
@@ -43,6 +44,7 @@
     previewHtml,
     setupPreview,
     home,
+    isStaticBuild,
     staticStoriesBase,
     viewports,
     backgrounds,
@@ -223,8 +225,8 @@
       {viewports}
       {backgrounds}
       {activeStory}
-      {activeArgs}
       hasHome={Boolean(home)}
+      {isStaticBuild}
       {staticStoriesBase}
       {toolbar}
     />

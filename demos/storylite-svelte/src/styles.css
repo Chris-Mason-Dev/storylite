@@ -3,6 +3,7 @@
 
 @layer demo {
   :root {
+    color-scheme: light dark;
     --svelte-accent: oklch(62% 0.18 38);
     --svelte-surface: light-dark(#fffaf3, #201714);
     --svelte-border: light-dark(#ead7c4, #4a3329);

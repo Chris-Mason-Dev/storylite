@@ -3,6 +3,7 @@
 
 @layer demo {
   :root {
+    color-scheme: light dark;
     --vue-accent: oklch(62% 0.16 154);
     --vue-surface: light-dark(#f7fff9, #102018);
     --vue-border: light-dark(#cdebd6, #2f5a41);

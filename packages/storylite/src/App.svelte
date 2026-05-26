@@ -17,6 +17,7 @@
   import {
     globalCss,
     home,
+    isStaticBuild,
     previewHtml,
     projectUi,
     setupPreview,
@@ -200,6 +201,7 @@
       {previewHtml}
       {setupPreview}
       {home}
+      {isStaticBuild}
       {staticStoriesBase}
       {viewports}
       {backgrounds}

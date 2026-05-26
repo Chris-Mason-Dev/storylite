@@ -318,6 +318,9 @@ importers:
 
   packages/storylite:
     dependencies:
+      '@babel/parser':
+        specifier: ^7.29.3
+        version: 7.29.3
       '@storylite/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -2602,7 +2605,7 @@ snapshots:
 
   ast-kit@3.0.0-beta.1:
     dependencies:
-      '@babel/parser': 8.0.0-rc.4
+      '@babel/parser': 8.0.0-rc.5
       estree-walker: 3.0.3
       pathe: 2.0.3
 

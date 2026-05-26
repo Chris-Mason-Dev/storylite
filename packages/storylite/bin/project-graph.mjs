@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { isAbsolute, relative, resolve } from 'node:path'
+import { parse } from '@babel/parser'
 import fg from 'fast-glob'
 import { loadConfigFromFile, parseAst, transformWithOxc } from 'vite'
 import { resolveStoryliteCustomization } from './customization.mjs'
@@ -68,7 +69,10 @@ export async function loadManifest(root, server = null) {
   const configPath = findConfigPath(root)
   const config = await loadStoryliteProjectConfig(root, server, configPath)
   const storyFiles = await resolveStoryFiles(root, config.stories ?? defaultConfig.stories)
-  const storyExportNamesByFile = await loadStoryExportNamesByFile(root, storyFiles)
+  const [storyExportNamesByFile, storySourceMetadataByFile] = await Promise.all([
+    loadStoryExportNamesByFile(root, storyFiles),
+    loadStorySourceMetadataByFile(root, storyFiles),
+  ])
   const cssFiles = resolveFiles(root, config.css ?? [])
   const publicDir = resolvePublicDir(root, config.publicDir)
   const setupFile = config.setup ? resolveFile(root, config.setup) : null
@@ -82,6 +86,7 @@ export async function loadManifest(root, server = null) {
     configPath,
     storyFiles,
     storyExportNamesByFile,
+    storySourceMetadataByFile,
     cssFiles,
     publicDir,
     setupFile,
@@ -172,6 +177,8 @@ export function generateProjectModuleCode(manifest, options = {}) {
           )
           .join(',\n')
   const storyModuleExportNames = JSON.stringify(manifest.storyExportNamesByFile ?? {})
+  const storySourceMetadata = JSON.stringify(manifest.storySourceMetadataByFile ?? {})
+  const isStaticBuild = options.isStaticBuild ?? !options.serveManager
 
   return `${storyImports}
 ${cssImports}
@@ -182,6 +189,7 @@ export const storyModules = {
 ${storyMap}
 };
 export const storyModuleExportNames = ${storyModuleExportNames};
+export const storySourceMetadata = ${storySourceMetadata};
 export const globalCss = [${cssList}];
 export const setupPreview = importedSetupPreview;
 export const storyIdResolver = ${formatFunctionExport(manifest.storyIdResolverSource)};
@@ -192,6 +200,7 @@ export const projectUi = ${JSON.stringify(manifest.ui)};
 export const previewHtml = ${JSON.stringify(manifest.preview)};
 export const managerHtml = ${JSON.stringify(manifest.manager)};
 export const home = ${JSON.stringify(manifest.home)};
+export const isStaticBuild = ${JSON.stringify(isStaticBuild)};
 export const staticStoriesBase = ${JSON.stringify('./stories/')};`
 }
 
@@ -305,6 +314,17 @@ async function loadStoryExportNamesByFile(root, storyFiles) {
   return Object.fromEntries(entries)
 }
 
+async function loadStorySourceMetadataByFile(root, storyFiles) {
+  const entries = await Promise.all(
+    storyFiles.map(async (file) => [
+      relative(root, file).replaceAll('\\', '/'),
+      extractStorySourceMetadata(await readFile(file, 'utf8'), file),
+    ]),
+  )
+
+  return Object.fromEntries(entries)
+}
+
 export async function extractStoryExportNames(source, file = 'story.stories.ts') {
   let ast
 
@@ -335,6 +355,57 @@ export async function extractStoryExportNames(source, file = 'story.stories.ts')
   }
 
   return names
+}
+
+export function extractStorySourceMetadata(source, file = 'story.stories.tsx') {
+  let ast
+
+  try {
+    ast = parse(source, {
+      sourceType: 'module',
+      plugins: babelParserPluginsForFile(file),
+      errorRecovery: true,
+    })
+  } catch {
+    return {}
+  }
+
+  const declarations = collectTopLevelDeclarations(ast.program.body)
+  const metaComponentName = extractMetaComponentName(ast.program.body, declarations)
+  const storyComponentNames = {}
+
+  for (const statement of ast.program.body) {
+    if (statement.type !== 'ExportNamedDeclaration') {
+      continue
+    }
+
+    if (statement.declaration) {
+      collectDeclarationStoryComponentNames(
+        storyComponentNames,
+        statement.declaration,
+        declarations,
+      )
+      continue
+    }
+
+    for (const specifier of statement.specifiers ?? []) {
+      const exportedName = exportNameFromSpecifier(specifier)
+      const localName = specifier.local?.name
+      if (!exportedName || !localName) {
+        continue
+      }
+
+      const componentName = extractStoryComponentName(declarations.get(localName), declarations)
+      if (componentName) {
+        storyComponentNames[exportedName] = componentName
+      }
+    }
+  }
+
+  return {
+    ...(metaComponentName ? { metaComponentName } : {}),
+    ...(Object.keys(storyComponentNames).length > 0 ? { storyComponentNames } : {}),
+  }
 }
 
 function resolveFiles(root, files) {
@@ -403,6 +474,339 @@ function addExportName(names, name) {
   }
 
   names.push(name)
+}
+
+function babelParserPluginsForFile(file) {
+  const plugins = []
+
+  if (/\.[cm]?[jt]sx$/.test(file)) {
+    plugins.push('jsx')
+  }
+
+  if (/\.[cm]?tsx?$/.test(file)) {
+    plugins.push('typescript')
+  }
+
+  return plugins
+}
+
+function collectTopLevelDeclarations(statements) {
+  const declarations = new Map()
+
+  for (const statement of statements) {
+    collectDeclarationBindings(declarations, statement)
+
+    if (statement.type === 'ExportNamedDeclaration' && statement.declaration) {
+      collectDeclarationBindings(declarations, statement.declaration)
+    }
+  }
+
+  return declarations
+}
+
+function collectDeclarationBindings(declarations, declaration) {
+  if (declaration.type === 'VariableDeclaration') {
+    for (const declarator of declaration.declarations) {
+      if (declarator.id?.type === 'Identifier') {
+        declarations.set(declarator.id.name, declarator.init)
+      }
+    }
+    return
+  }
+
+  if (
+    (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') &&
+    declaration.id?.name
+  ) {
+    declarations.set(declaration.id.name, declaration)
+  }
+}
+
+function extractMetaComponentName(statements, declarations) {
+  for (const statement of statements) {
+    if (statement.type !== 'ExportDefaultDeclaration') {
+      continue
+    }
+
+    const componentName = extractObjectComponentName(
+      resolveDeclarationExpression(statement.declaration, declarations),
+    )
+    if (componentName) {
+      return componentName
+    }
+  }
+
+  return null
+}
+
+function collectDeclarationStoryComponentNames(target, declaration, declarations) {
+  if (declaration.type === 'VariableDeclaration') {
+    for (const declarator of declaration.declarations) {
+      const exportName = declarator.id?.type === 'Identifier' ? declarator.id.name : null
+      const componentName = extractStoryComponentName(declarator.init, declarations)
+
+      if (exportName && componentName) {
+        target[exportName] = componentName
+      }
+    }
+    return
+  }
+
+  if (declaration.type === 'FunctionDeclaration' && declaration.id?.name) {
+    const componentName = extractRenderComponentName(declaration)
+    if (componentName) {
+      target[declaration.id.name] = componentName
+    }
+  }
+}
+
+function extractStoryComponentName(node, declarations, seen = new Set()) {
+  const expression = resolveDeclarationExpression(node, declarations, seen)
+
+  if (!expression) {
+    return null
+  }
+
+  if (expression.type === 'ObjectExpression') {
+    return extractObjectComponentName(expression) ?? extractObjectRenderComponentName(expression)
+  }
+
+  if (
+    expression.type === 'ArrowFunctionExpression' ||
+    expression.type === 'FunctionExpression' ||
+    expression.type === 'FunctionDeclaration'
+  ) {
+    return extractRenderComponentName(expression)
+  }
+
+  return null
+}
+
+function resolveDeclarationExpression(node, declarations, seen = new Set()) {
+  const expression = unwrapExpression(node)
+
+  if (expression?.type !== 'Identifier') {
+    return expression
+  }
+
+  if (seen.has(expression.name)) {
+    return expression
+  }
+
+  const declaration = declarations.get(expression.name)
+  if (!declaration) {
+    return expression
+  }
+
+  seen.add(expression.name)
+  return resolveDeclarationExpression(declaration, declarations, seen)
+}
+
+function extractObjectComponentName(objectExpression) {
+  if (objectExpression?.type !== 'ObjectExpression') {
+    return null
+  }
+
+  const property = findObjectProperty(objectExpression, 'component')
+  return property?.type === 'ObjectProperty' ? componentExpressionName(property.value) : null
+}
+
+function extractObjectRenderComponentName(objectExpression) {
+  if (objectExpression?.type !== 'ObjectExpression') {
+    return null
+  }
+
+  const property = findObjectProperty(objectExpression, 'render')
+
+  if (!property) {
+    return null
+  }
+
+  if (property.type === 'ObjectMethod') {
+    return extractRenderComponentName(property)
+  }
+
+  return property.type === 'ObjectProperty' ? extractRenderComponentName(property.value) : null
+}
+
+function findObjectProperty(objectExpression, name) {
+  return objectExpression.properties.find((property) => {
+    if (property.type !== 'ObjectProperty' && property.type !== 'ObjectMethod') {
+      return false
+    }
+
+    return propertyKeyName(property.key) === name
+  })
+}
+
+function propertyKeyName(key) {
+  if (key.type === 'Identifier') {
+    return key.name
+  }
+
+  if (key.type === 'StringLiteral') {
+    return key.value
+  }
+
+  return null
+}
+
+function extractRenderComponentName(node) {
+  const expression = unwrapExpression(node)
+
+  if (
+    !expression ||
+    (expression.type !== 'ArrowFunctionExpression' &&
+      expression.type !== 'FunctionExpression' &&
+      expression.type !== 'FunctionDeclaration' &&
+      expression.type !== 'ObjectMethod')
+  ) {
+    return null
+  }
+
+  if (expression.body.type === 'BlockStatement') {
+    return findReturnedJsxComponentName(expression.body)
+  }
+
+  return jsxComponentNameFromExpression(expression.body)
+}
+
+function findReturnedJsxComponentName(node) {
+  if (!node) {
+    return null
+  }
+
+  if (node.type === 'ReturnStatement') {
+    return jsxComponentNameFromExpression(node.argument)
+  }
+
+  if (node.type === 'BlockStatement' || node.type === 'Program') {
+    for (const statement of node.body) {
+      const componentName = findReturnedJsxComponentName(statement)
+      if (componentName) {
+        return componentName
+      }
+    }
+  }
+
+  if (node.type === 'IfStatement') {
+    return (
+      findReturnedJsxComponentName(node.consequent) ?? findReturnedJsxComponentName(node.alternate)
+    )
+  }
+
+  return null
+}
+
+function jsxComponentNameFromExpression(node) {
+  const expression = unwrapExpression(node)
+
+  if (expression?.type !== 'JSXElement') {
+    return null
+  }
+
+  return jsxElementName(expression.openingElement.name)
+}
+
+function jsxElementName(name) {
+  if (name.type === 'JSXIdentifier') {
+    return isComponentName(name.name) ? name.name : null
+  }
+
+  if (name.type === 'JSXMemberExpression') {
+    const objectName = jsxMemberObjectName(name.object)
+    const propertyName = name.property.type === 'JSXIdentifier' ? name.property.name : null
+    return objectName && propertyName ? `${objectName}.${propertyName}` : null
+  }
+
+  return null
+}
+
+function jsxMemberObjectName(name) {
+  if (name.type === 'JSXIdentifier') {
+    return name.name
+  }
+
+  if (name.type === 'JSXMemberExpression') {
+    const objectName = jsxMemberObjectName(name.object)
+    const propertyName = name.property.type === 'JSXIdentifier' ? name.property.name : null
+    return objectName && propertyName ? `${objectName}.${propertyName}` : null
+  }
+
+  return null
+}
+
+function componentExpressionName(node) {
+  const expression = unwrapExpression(node)
+
+  if (!expression) {
+    return null
+  }
+
+  if (expression.type === 'Identifier') {
+    return isComponentName(expression.name) ? expression.name : null
+  }
+
+  if (expression.type === 'MemberExpression' && !expression.computed) {
+    const objectName = memberExpressionObjectName(expression.object)
+    const propertyName = expression.property.type === 'Identifier' ? expression.property.name : null
+    return objectName && propertyName ? `${objectName}.${propertyName}` : null
+  }
+
+  return null
+}
+
+function memberExpressionObjectName(node) {
+  const expression = unwrapExpression(node)
+
+  if (expression?.type === 'Identifier') {
+    return expression.name
+  }
+
+  if (expression?.type === 'MemberExpression' && !expression.computed) {
+    const objectName = memberExpressionObjectName(expression.object)
+    const propertyName = expression.property.type === 'Identifier' ? expression.property.name : null
+    return objectName && propertyName ? `${objectName}.${propertyName}` : null
+  }
+
+  return null
+}
+
+function unwrapExpression(node) {
+  let expression = node
+
+  while (
+    expression &&
+    (expression.type === 'ParenthesizedExpression' ||
+      expression.type === 'TSAsExpression' ||
+      expression.type === 'TSSatisfiesExpression' ||
+      expression.type === 'TSTypeAssertion' ||
+      expression.type === 'TSNonNullExpression')
+  ) {
+    expression = expression.expression
+  }
+
+  return expression
+}
+
+function exportNameFromSpecifier(specifier) {
+  if (specifier.type !== 'ExportSpecifier') {
+    return null
+  }
+
+  if (specifier.exported?.type === 'Identifier') {
+    return specifier.exported.name
+  }
+
+  if (specifier.exported?.type === 'StringLiteral') {
+    return specifier.exported.value
+  }
+
+  return null
+}
+
+function isComponentName(name) {
+  return /^[A-Z]/.test(name)
 }
 
 function oxcLanguageForFile(file) {

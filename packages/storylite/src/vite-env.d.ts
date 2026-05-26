@@ -18,6 +18,7 @@ declare module 'virtual:storylite/project' {
     StoryIdResolver,
     StoryLiteClientRendererModule,
     StoryModule,
+    StorySourceMetadataByImportPath,
   } from './lib/storylite/types'
 
   export type StoryLiteProjectUi = {
@@ -58,6 +59,7 @@ declare module 'virtual:storylite/project' {
   export const projectRoot: string
   export const storyModules: Record<string, StoryModule>
   export const storyModuleExportNames: Record<string, readonly string[]>
+  export const storySourceMetadata: StorySourceMetadataByImportPath
   export const globalCss: readonly string[]
   export const setupPreview: ((window: Window) => void) | undefined
   export const storyIdResolver: StoryIdResolver | undefined
@@ -66,5 +68,6 @@ declare module 'virtual:storylite/project' {
   export const previewHtml: StoryLitePreviewHtml
   export const managerHtml: StoryLiteManagerHtml
   export const home: StoryLiteHome
+  export const isStaticBuild: boolean
   export const staticStoriesBase: string
 }

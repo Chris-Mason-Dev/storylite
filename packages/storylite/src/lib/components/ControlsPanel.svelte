@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte'
+  import Check from '@lucide/svelte/icons/check'
+  import Code from '@lucide/svelte/icons/code'
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import { inferControlType } from '../storylite/normalize'
+  import { resolveStorySource } from '../storylite/source'
   import type { StoryArgType, StoryArgs, StoryLiteStory } from '../storylite/types'
 
   type Props = {
@@ -11,10 +15,20 @@
   }
 
   let { activeStory, activeArgs, onResetArgs, onUpdateArg }: Props = $props()
+  let copiedStoryId: string | null = $state(null)
+  let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
   const activeArgNames = $derived(
     activeStory ? Object.keys({ ...activeStory.argTypes, ...activeStory.args }).sort() : [],
   )
+  const sourceSnippet = $derived(activeStory ? resolveStorySource(activeStory, activeArgs) : null)
+  const didCopySource = $derived(Boolean(activeStory && copiedStoryId === activeStory.id))
+
+  onDestroy(() => {
+    if (copyResetTimer) {
+      window.clearTimeout(copyResetTimer)
+    }
+  })
 
   function controlType(name: string): string {
     return inferControlType(activeStory?.argTypes[name], activeArgs[name])
@@ -22,6 +36,31 @@
 
   function argType(name: string): StoryArgType | undefined {
     return activeStory?.argTypes[name]
+  }
+
+  async function copyStorySource(): Promise<void> {
+    if (!activeStory || !sourceSnippet) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(sourceSnippet)
+      copiedStoryId = activeStory.id
+
+      if (copyResetTimer) {
+        window.clearTimeout(copyResetTimer)
+      }
+
+      const copiedId = activeStory.id
+      copyResetTimer = window.setTimeout(() => {
+        if (copiedStoryId === copiedId) {
+          copiedStoryId = null
+        }
+        copyResetTimer = null
+      }, 1200)
+    } catch {
+      copiedStoryId = null
+    }
   }
 </script>
 
@@ -106,5 +145,25 @@
         <p class="empty">This story has no controls.</p>
       {/each}
     </form>
+
+    {#if sourceSnippet}
+      <footer class="inspector__footer">
+        <button
+          type="button"
+          class="inspector__copy-button"
+          class:active={didCopySource}
+          aria-label={didCopySource ? 'Copied snippet' : 'Copy snippet'}
+          onclick={copyStorySource}
+        >
+          {#if didCopySource}
+            <Check size={14} aria-hidden="true" />
+            <span>Copied</span>
+          {:else}
+            <Code size={14} aria-hidden="true" />
+            <span>Copy snippet</span>
+          {/if}
+        </button>
+      </footer>
+    {/if}
   </div>
 </aside>

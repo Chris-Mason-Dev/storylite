@@ -38,12 +38,19 @@ export function resolveStorySource(story: StoryLiteStory, args: StoryArgs): stri
     }
   }
 
-  const componentName = resolveComponentName(story.component)
+  const componentName = story.sourceComponentName
   if (componentName && componentRenderers.has(story.renderer)) {
+    if (story.render && story.component === undefined) {
+      return (
+        resolveRenderOutputSource(story, args, componentName) ??
+        renderComponentSource(story.renderer, componentName, args)
+      )
+    }
+
     return renderComponentSource(story.renderer, componentName, args)
   }
 
-  return resolveRenderOutputSource(story, args)
+  return null
 }
 
 function resolveExplicitSource(story: StoryLiteStory, args: StoryArgs): string | null {
@@ -54,8 +61,12 @@ function resolveExplicitSource(story: StoryLiteStory, args: StoryArgs): string |
   }
 
   if (typeof source === 'function') {
-    const value = source(args, sourceContext(story))
-    return typeof value === 'string' && value.length > 0 ? value : null
+    try {
+      const value = source(args, sourceContext(story))
+      return typeof value === 'string' && value.length > 0 ? value : null
+    } catch {
+      return null
+    }
   }
 
   return null
@@ -76,13 +87,17 @@ function resolveHtmlRenderSource(story: StoryLiteStory, args: StoryArgs): string
   return null
 }
 
-function resolveRenderOutputSource(story: StoryLiteStory, args: StoryArgs): string | null {
+function resolveRenderOutputSource(
+  story: StoryLiteStory,
+  args: StoryArgs,
+  componentName: string,
+): string | null {
   if (!story.render || !componentRenderers.has(story.renderer)) {
     return null
   }
 
   const output = renderStoryForSource(story, args)
-  const component = resolveRenderOutputComponent(output)
+  const component = resolveRenderOutputComponent(output, componentName)
   return component ? renderComponentSource(story.renderer, component.name, component.props) : null
 }
 
@@ -125,14 +140,16 @@ function renderContext(story: StoryLiteStory): StoryContext {
   }
 }
 
-function resolveRenderOutputComponent(output: unknown): ComponentSource | null {
+function resolveRenderOutputComponent(
+  output: unknown,
+  componentName: string,
+): ComponentSource | null {
   const value = Array.isArray(output) ? output.find(Boolean) : output
   if (!isRecord(value) || !('type' in value)) {
     return null
   }
 
-  const name = resolveComponentName(value.type)
-  if (!name || typeof value.type === 'string') {
+  if (typeof value.type === 'string') {
     return null
   }
 
@@ -142,7 +159,7 @@ function resolveRenderOutputComponent(output: unknown): ComponentSource | null {
   )
 
   return {
-    name,
+    name: componentName,
     props: sourceProps,
   }
 }
@@ -223,41 +240,6 @@ function renderWebComponentSource(tagName: string, args: StoryArgs): string {
   const label = typeof args.label === 'string' ? escapeHtml(args.label) : ''
 
   return `<${tagName}${attrs}>${label}</${tagName}>`
-}
-
-function resolveComponentName(component: unknown): string | null {
-  if (typeof component === 'string') {
-    return component
-  }
-
-  if (typeof component === 'function') {
-    const displayName = (component as { readonly displayName?: string }).displayName
-    return safeComponentName(displayName ?? component.name)
-  }
-
-  if (!isRecord(component)) {
-    return null
-  }
-
-  return (
-    safeComponentName(stringProperty(component, 'displayName')) ??
-    safeComponentName(stringProperty(component, 'name')) ??
-    safeComponentName(stringProperty(component, '__name')) ??
-    resolveComponentName(component.type)
-  )
-}
-
-function safeComponentName(name: string | undefined): string | null {
-  if (!name || name === 'default') {
-    return null
-  }
-
-  return name
-}
-
-function stringProperty(value: Record<string, unknown>, name: string): string | undefined {
-  const property = value[name]
-  return typeof property === 'string' ? property : undefined
 }
 
 function serializeNode(node: Node | DocumentFragment): string {

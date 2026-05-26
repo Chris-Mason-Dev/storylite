@@ -38,6 +38,19 @@ describe('resolveStorySource', () => {
     expect(resolveStorySource(story({ source: () => null }), { label: 'Changed' })).toBeNull()
   })
 
+  it('returns null when explicit source callback throws', () => {
+    expect(
+      resolveStorySource(
+        story({
+          source: () => {
+            throw new Error('Invalid source')
+          },
+        }),
+        { label: 'Changed' },
+      ),
+    ).toBeNull()
+  })
+
   it('generates escaped web-component source from primitive args', () => {
     expect(
       resolveStorySource(
@@ -77,6 +90,7 @@ describe('resolveStorySource', () => {
         story({
           component: ReactButton,
           renderer: 'react',
+          sourceComponentName: 'ReactButton',
         }),
         { label: 'Save', disabled: false },
       ),
@@ -91,6 +105,7 @@ describe('resolveStorySource', () => {
         story({
           component: SvelteButton,
           renderer: 'svelte',
+          sourceComponentName: 'SvelteButton',
         }),
         { label: 'Save', disabled: false },
       ),
@@ -103,6 +118,7 @@ describe('resolveStorySource', () => {
         story({
           component: { __name: 'VueButton' },
           renderer: 'vue',
+          sourceComponentName: 'VueButton',
         }),
         { activeItem: 'Docs', disabled: false },
       ),
@@ -116,6 +132,7 @@ describe('resolveStorySource', () => {
       resolveStorySource(
         story({
           renderer: 'react',
+          sourceComponentName: 'ReactButton',
           render: (args) => ({
             type: ReactButton,
             props: { label: args.label, disabled: args.disabled },
@@ -124,6 +141,38 @@ describe('resolveStorySource', () => {
         { label: 'Save', disabled: true },
       ),
     ).toBe('<ReactButton label={"Save"} disabled={true} />')
+  })
+
+  it('uses stable source metadata instead of minified runtime component names', () => {
+    function bs() {}
+
+    expect(
+      resolveStorySource(
+        story({
+          renderer: 'preact',
+          sourceComponentName: 'Card',
+          render: (args) => ({
+            type: bs,
+            props: { eyebrow: args.eyebrow, title: args.title },
+          }),
+        }),
+        { eyebrow: 'Adapter', title: 'Preact renderer' },
+      ),
+    ).toBe('<Card eyebrow={"Adapter"} title={"Preact renderer"} />')
+  })
+
+  it('returns null for framework component stories without stable source metadata', () => {
+    function ReactButton() {}
+
+    expect(
+      resolveStorySource(
+        story({
+          component: ReactButton,
+          renderer: 'react',
+        }),
+        { label: 'Save' },
+      ),
+    ).toBeNull()
   })
 
   it('returns null when no reliable source is available', () => {

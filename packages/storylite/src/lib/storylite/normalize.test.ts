@@ -62,6 +62,32 @@ describe('normalizeStoryModule', () => {
 
     expect(stories.map((story) => story.exportName)).toEqual(['Zebra', 'Alpha', 'Middle'])
   })
+
+  it('attaches source component metadata by story and meta fallback', () => {
+    const stories = normalizeStoryModule(
+      '../demo/button.stories.ts',
+      {
+        default: { title: 'CSS/Button' },
+        MetaOnly: { args: { label: 'Meta' } },
+        StoryOnly: { args: { label: 'Story' } },
+      },
+      {
+        sourceMetadata: {
+          metaComponentName: 'MetaButton',
+          storyComponentNames: {
+            StoryOnly: 'StoryButton',
+          },
+        },
+      },
+    )
+
+    expect(stories.find((story) => story.exportName === 'MetaOnly')?.sourceComponentName).toBe(
+      'MetaButton',
+    )
+    expect(stories.find((story) => story.exportName === 'StoryOnly')?.sourceComponentName).toBe(
+      'StoryButton',
+    )
+  })
 })
 
 describe('groupStories', () => {

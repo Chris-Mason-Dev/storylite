@@ -9,8 +9,10 @@ import type {
   StoryLiteRenderer,
   StoryLiteStory,
   StoryMeta,
+  StoryModuleSourceMetadata,
   StoryModule,
   StoryNormalizationResult,
+  StorySourceMetadataByImportPath,
   StoryParameters,
 } from './types'
 import { isRecord, kebabCase } from './utils.js'
@@ -20,6 +22,8 @@ const reservedExports = new Set(['default', '__esModule'])
 type StoryNormalizationOptions = StoryIdOptions & {
   readonly exportNames?: readonly string[]
   readonly exportNamesByImportPath?: Record<string, readonly string[]>
+  readonly sourceMetadata?: StoryModuleSourceMetadata
+  readonly sourceMetadataByImportPath?: StorySourceMetadataByImportPath
 }
 
 export function normalizeStoryModules(
@@ -37,6 +41,7 @@ export function normalizeStoryModulesWithDiagnostics(
     normalizeStoryModule(importPath, module, {
       ...options,
       exportNames: options.exportNamesByImportPath?.[importPath] ?? options.exportNames,
+      sourceMetadata: options.sourceMetadataByImportPath?.[importPath] ?? options.sourceMetadata,
     }),
   )
 
@@ -72,6 +77,9 @@ export function normalizeStoryModule(
     const component = storyExport.component ?? meta.component
     const render = storyExport.render
     const source = storyExport.source ?? meta.source
+    const sourceComponentName =
+      options.sourceMetadata?.storyComponentNames?.[exportName] ??
+      options.sourceMetadata?.metaComponentName
     const renderer = selectRenderer(parameters, component, render)
 
     stories.push({
@@ -86,6 +94,7 @@ export function normalizeStoryModule(
       parameters,
       render,
       source,
+      sourceComponentName,
       renderer,
     })
   }
