@@ -1,6 +1,6 @@
 {
   "name": "@storylite/storylite",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Lightweight alternative to Storybook for HTML, React, Preact, Svelte, Vue, and Solid component stories",
   "keywords": [
     "component-development",
