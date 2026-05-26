@@ -62,13 +62,13 @@
     --sl-header-block-size: 56px;
 
     /* Similar grid as defined in packages/storylite/src/lib/renderers/runtime.ts:260 */
-    --sl-grid-size: 4px;
-    --sl-grid-major-size: calc(var(--sl-grid-size) * 4);
-    --sl-grid-offset: 0px;
-    --sl-grid-line-width: 1px;
-    --sl-grid-line-color: rgb(130 130 130 / 45%);
-    --sl-grid-line-color-2: rgb(130 130 130 / 20%);
-    --sl-grid-background-color: light-dark(#f7f7f7, #111111);
+    --storylite-grid-size: 4px;
+    --storylite-grid-major-size: calc(var(--storylite-grid-size) * 4);
+    --storylite-grid-offset: 0px;
+    --storylite-grid-line-width: 1px;
+    --storylite-grid-line-color: rgb(130 130 130 / 45%);
+    --storylite-grid-line-color-2: rgb(130 130 130 / 20%);
+    --storylite-grid-background-color: light-dark(#f7f7f7, #111111);
   }
 }
 
@@ -665,12 +665,12 @@
 
   .toolbar .toolbar-dropdown__swatch[data-preview-theme='light'] {
     color-scheme: light;
-    --sl-grid-background-color: #f7f7f7;
+    --storylite-grid-background-color: #f7f7f7;
   }
 
   .toolbar .toolbar-dropdown__swatch[data-preview-theme='dark'] {
     color-scheme: dark;
-    --sl-grid-background-color: #111111;
+    --storylite-grid-background-color: #111111;
   }
 
   .toolbar .toolbar-dropdown__item span {
