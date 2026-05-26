@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import fg from 'fast-glob'
 import { createServer } from 'vite'
 import { fileUrl, storyPagePath } from './project-graph.mjs'
+import { transformBuiltManagerHtml } from './customization.mjs'
 import {
   escapeAttribute,
   escapeHtml,
@@ -16,41 +16,13 @@ import {
 } from '../src/lib/storylite/utils.js'
 
 const reservedExports = new Set(['default', '__esModule'])
-const appHeadMarker = '<!--app-head-->'
-const appHtmlMarker = '<!--app-html-->'
 
-export async function injectPrerenderedStoryLiteShell({
-  outDir,
-  prerenderOutDir,
-  managerCss = '',
-}) {
-  try {
-    const indexPath = resolve(outDir, 'index.html')
-    const entryPath = resolve(prerenderOutDir, 'entry-server.js')
-    const template = await readFile(indexPath, 'utf8')
-    const { render } = await import(pathToFileURL(entryPath).href)
-    const rendered = await render()
+export async function emitManagerShell({ managerDistDir, outDir, manager }) {
+  await cp(managerDistDir, outDir, { recursive: true })
 
-    await writeFile(indexPath, injectPrerenderedAppHtml(template, rendered, managerCss))
-  } finally {
-    await rm(prerenderOutDir, { recursive: true, force: true })
-  }
-}
-
-export function injectPrerenderedAppHtml(template, rendered, managerCss = '') {
-  if (!template.includes(appHeadMarker)) {
-    throw new Error(`Missing ${appHeadMarker} marker in built StoryLite index.html`)
-  }
-
-  if (!template.includes(appHtmlMarker)) {
-    throw new Error(`Missing ${appHtmlMarker} marker in built StoryLite index.html`)
-  }
-
-  const html = template
-    .replace(appHeadMarker, () => rendered.head)
-    .replace(appHtmlMarker, () => rendered.html)
-
-  return injectManagerCss(html, managerCss)
+  const indexPath = resolve(outDir, 'index.html')
+  const template = await readFile(indexPath, 'utf8')
+  await writeFile(indexPath, transformBuiltManagerHtml(template, manager))
 }
 
 export async function emitStaticStoryPages({
@@ -538,19 +510,4 @@ function collectCss(story) {
 
 function relativeUrl(base, fallback) {
   return base === './' ? fallback : base
-}
-
-function injectManagerCss(html, css) {
-  const trimmedCss = css.trim()
-
-  if (!trimmedCss) {
-    return html
-  }
-
-  const style = `<style id="storylite-manager-custom-css">\n${escapeStyleText(trimmedCss)}\n</style>`
-  return html.replace('</head>', `${style}\n  </head>`)
-}
-
-function escapeStyleText(value) {
-  return value.replaceAll('</style', '<\\/style')
 }

@@ -439,6 +439,23 @@ export function transformManagerHtml(html, manager) {
   )
 }
 
+export function transformBuiltManagerHtml(html, manager, options = {}) {
+  const withAttrs = applyAttrsToTag(
+    applyAttrsToTag(html, 'html', manager.htmlAttrs ?? defaultManagerHtmlAttrs),
+    'body',
+    manager.bodyAttrs ?? defaultManagerBodyAttrs,
+  )
+  const withDevClient = options.viteClient ? injectViteClient(withAttrs) : withAttrs
+
+  return injectBeforeBodyEnd(
+    injectAfterBodyStart(
+      injectManagerHead(withDevClient, manager.headHtml ?? ''),
+      manager.bodyStartHtml ?? '',
+    ),
+    manager.bodyEndHtml ?? '',
+  )
+}
+
 export function renderManagerDocumentHead(options = {}) {
   const includeDefaultTitle = options.includeDefaultTitle ?? true
   const tags = [
@@ -546,6 +563,12 @@ function injectAfterBodyStart(html, bodyStartHtml) {
 
 function injectBeforeBodyEnd(html, bodyEndHtml) {
   return bodyEndHtml ? html.replace('</body>', `    ${bodyEndHtml}\n  </body>`) : html
+}
+
+function injectViteClient(html) {
+  return html.includes('/@vite/client')
+    ? html
+    : html.replace('</head>', '    <script type="module" src="/@vite/client"></script>\n  </head>')
 }
 
 function removeAttribute(attrs, name) {

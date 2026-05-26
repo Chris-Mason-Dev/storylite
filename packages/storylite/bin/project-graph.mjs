@@ -3,15 +3,14 @@ import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { isAbsolute, relative, resolve } from 'node:path'
 import fg from 'fast-glob'
-import { compile as compileMdsvex } from 'mdsvex'
-import { render as renderSvelte } from 'svelte/server'
-import { compile as compileSvelte } from 'svelte/compiler'
 import { loadConfigFromFile } from 'vite'
 import { resolveStoryliteCustomization } from './customization.mjs'
+import { parseMarkdown } from './markdown.mjs'
 import { isBareImportSpecifier, isRecord } from '../src/lib/storylite/utils.js'
 
 export const virtualProjectId = 'virtual:storylite/project'
 export const resolvedVirtualProjectId = `\0${virtualProjectId}`
+export const projectModulePath = '/project.js'
 
 const defaultConfig = { stories: ['./src/**/*.stories.{ts,tsx,js,jsx}'], css: [] }
 const builtinRenderers = new Set(['html', 'web-components'])
@@ -200,27 +199,8 @@ export function storyPagePath(storyId) {
   return `stories/${storyId}/index.html`
 }
 
-export async function parseHomeMarkdown(source, filename = 'home.md') {
-  const compiledMarkdown = await compileMdsvex(source, {
-    extensions: ['.md'],
-  })
-  const compiledSvelte = compileSvelte(compiledMarkdown.code, {
-    filename,
-    generate: 'server',
-  })
-  const moduleCode = compiledSvelte.js.code.replace(
-    "from 'svelte/internal/server'",
-    `from ${JSON.stringify(import.meta.resolve('svelte/internal/server'))}`,
-  )
-  const module = await import(
-    `data:text/javascript;charset=utf-8,${encodeURIComponent(moduleCode)}`
-  )
-  const { body } = renderSvelte(module.default)
-
-  return {
-    frontmatter: normalizeFrontmatter(module.metadata ?? compiledMarkdown.data?.fm),
-    html: body,
-  }
+export async function parseHomeMarkdown(source) {
+  return parseMarkdown(source)
 }
 
 function findConfigPath(root) {
@@ -357,10 +337,6 @@ function isProjectFile(root, file) {
     normalized.endsWith('.tsx') ||
     normalized.endsWith('.ts')
   )
-}
-
-function normalizeFrontmatter(value) {
-  return isRecord(value) ? value : {}
 }
 
 function formatFunctionExport(source) {

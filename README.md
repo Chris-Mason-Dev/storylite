@@ -49,6 +49,11 @@ pnpm add -D @storylite/renderer-vue
 pnpm add -D @storylite/renderer-solid
 ```
 
+Renderer adapters keep framework-specific tooling out of `@storylite/storylite`. Install the
+framework peers only for adapters you configure; for example React projects install `react` and
+`react-dom`, Svelte projects install `svelte`, and Vue/Solid projects install their renderer package
+plus the Vite plugin peer listed by that package.
+
 Add scripts:
 
 ```json

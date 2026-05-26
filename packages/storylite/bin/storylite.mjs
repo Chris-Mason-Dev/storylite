@@ -1,26 +1,27 @@
 #!/usr/bin/env node
+import { readFile, rm } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { dirname, extname, isAbsolute, relative, resolve } from 'node:path'
 import process from 'node:process'
 import { parseArgs } from 'node:util'
 import { createServer, build, preview } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { transformManagerHtml } from './customization.mjs'
+import { transformBuiltManagerHtml } from './customization.mjs'
 import { isBareImportSpecifier } from '../src/lib/storylite/utils.js'
 import {
   createProjectGraph,
   generateProjectModuleCode,
   loadStoryliteProjectConfig,
+  projectModulePath,
   resolvedVirtualProjectId,
   resolveStoryliteProjectPlugins,
   resolveStoryliteRendererPlugins,
   virtualProjectId,
 } from './project-graph.mjs'
-import { emitStaticStoryPages, injectPrerenderedStoryLiteShell } from './static-build.mjs'
+import { emitManagerShell, emitStaticStoryPages } from './static-build.mjs'
 
 const storyliteDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const appRoot = storyliteDir
-const entryServer = resolve(appRoot, 'src/entry-server.ts')
+const managerDistDir = resolve(storyliteDir, 'dist/manager')
 const projectRoot = process.cwd()
 const rawArgs = process.argv.slice(2)
 const command = rawArgs[0]
@@ -62,9 +63,16 @@ if (command === 'dev') {
   })
   const server = await createServer({
     configFile: false,
-    root: appRoot,
+    root: projectRoot,
+    appType: 'custom',
     publicDir: manifest.publicDir,
-    plugins: [svelte(), ...vitePlugins, storylitePlugin(projectRoot, graph)],
+    plugins: [
+      ...vitePlugins,
+      storylitePlugin(projectRoot, graph, {
+        managerDistDir,
+        serveManager: true,
+      }),
+    ],
     optimizeDeps: createDependencyOptimizationConfig(manifest),
     server: {
       port,
@@ -84,70 +92,41 @@ if (command === 'dev') {
     command: 'build',
     target: 'manager',
   })
-  const prerenderPlugins = await loadVitePlugins(projectRoot, {
-    command: 'build',
-    target: 'prerender',
-  })
   const base = readBaseOption()
   const outDir = resolve(projectRoot, 'dist-storylite')
-  const prerenderOutDir = resolve(outDir, '.storylite-prerender')
 
+  await rm(outDir, { recursive: true, force: true })
+  await emitManagerShell({
+    managerDistDir,
+    outDir,
+    manager: manifest.manager,
+  })
   await build({
     configFile: false,
-    root: appRoot,
+    root: projectRoot,
     base,
     publicDir: manifest.publicDir,
-    plugins: [svelte(), ...managerPlugins, storylitePlugin(projectRoot, graph)],
+    plugins: [...managerPlugins, storylitePlugin(projectRoot, graph)],
     build: {
       outDir,
-      emptyOutDir: true,
-    },
-  })
-
-  await build({
-    configFile: false,
-    root: appRoot,
-    base,
-    publicDir: false,
-    plugins: [
-      svelte(),
-      ...prerenderPlugins,
-      storylitePlugin(projectRoot, graph, {
-        includeRendererClientLoaders: false,
-        includeStoryModules: false,
-      }),
-    ],
-    ssr: {
-      noExternal: true,
-    },
-    build: {
-      outDir: prerenderOutDir,
-      emptyOutDir: true,
-      copyPublicDir: false,
-      ssr: entryServer,
+      emptyOutDir: false,
+      copyPublicDir: manifest.publicDir !== false,
       rolldownOptions: {
+        input: projectModulePath,
+        preserveEntrySignatures: 'strict',
         output: {
-          entryFileNames: 'entry-server.js',
-          chunkFileNames: 'chunks/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash][extname]',
+          entryFileNames: 'project.js',
+          chunkFileNames: 'storylite-assets/[name]-[hash].js',
+          assetFileNames: 'storylite-assets/[name]-[hash][extname]',
         },
       },
     },
-  })
-
-  await injectPrerenderedStoryLiteShell({
-    outDir,
-    prerenderOutDir,
-    managerCss: (await graph.load()).ui.css,
   })
 
   const staticPlugins = await loadVitePlugins(projectRoot, {
     command: 'build',
     target: 'static',
   })
-  const staticStoryPlugins = manifest.rendererAdapters.some((adapter) => adapter.name === 'svelte')
-    ? [svelte(), ...staticPlugins]
-    : staticPlugins
 
   await emitStaticStoryPages({
     appRoot,
@@ -155,7 +134,7 @@ if (command === 'dev') {
     outDir,
     base,
     graph,
-    rendererPlugins: staticStoryPlugins,
+    rendererPlugins: staticPlugins,
   })
 } else if (command === 'preview') {
   const base = readBaseOption()
@@ -208,19 +187,22 @@ function storylitePlugin(root, graph = createProjectGraph(root), options = {}) {
     configureServer(server) {
       graph.setServer(server)
       server.watcher.add(resolve(root, '.storylite'))
+
+      if (options.serveManager && options.managerDistDir) {
+        server.middlewares.use(async (req, res, next) => {
+          try {
+            await serveManagerRequest(req, res, next, graph, options.managerDistDir)
+          } catch (error) {
+            next(error)
+          }
+        })
+      }
     },
     resolveId(id) {
-      if (id === virtualProjectId) {
+      if (id === virtualProjectId || id === projectModulePath) {
         return resolvedVirtualProjectId
       }
       return null
-    },
-    transformIndexHtml: {
-      order: 'pre',
-      async handler(html) {
-        const manifest = await graph.load()
-        return transformManagerHtml(html, manifest.manager)
-      },
     },
     async handleHotUpdate(context) {
       if (!graph.isProjectFile(context.file)) {
@@ -234,12 +216,8 @@ function storylitePlugin(root, graph = createProjectGraph(root), options = {}) {
         context.server.moduleGraph.invalidateModule(module, new Set(), context.timestamp, true)
       }
 
-      if (graph.shouldFullReload(context.file)) {
-        context.server.ws.send({ type: 'full-reload' })
-        return []
-      }
-
-      return module ? [module] : []
+      context.server.ws.send({ type: 'full-reload' })
+      return []
     },
     async load(id) {
       if (id !== resolvedVirtualProjectId) {
@@ -248,6 +226,75 @@ function storylitePlugin(root, graph = createProjectGraph(root), options = {}) {
 
       return generateProjectModuleCode(await graph.load({ force: true }), options)
     },
+  }
+}
+
+async function serveManagerRequest(req, res, next, graph, managerDistDir) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    next()
+    return
+  }
+
+  const url = new URL(req.url ?? '/', 'http://storylite.local')
+
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    const manifest = await graph.load()
+    const template = await readFile(resolve(managerDistDir, 'index.html'), 'utf8')
+    const html = transformBuiltManagerHtml(template, manifest.manager, { viteClient: true })
+
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.end(req.method === 'HEAD' ? undefined : html)
+    return
+  }
+
+  const filePath = resolveManagerAssetPath(managerDistDir, url.pathname)
+
+  if (!filePath) {
+    next()
+    return
+  }
+
+  const content = await readFile(filePath)
+  res.statusCode = 200
+  res.setHeader('Content-Type', contentTypeForPath(filePath))
+  res.end(req.method === 'HEAD' ? undefined : content)
+}
+
+function resolveManagerAssetPath(managerDistDir, pathname) {
+  if (!pathname.startsWith('/storylite-assets/') && pathname !== '/favicon.svg') {
+    return null
+  }
+
+  const decodedPath = decodeURIComponent(pathname).replace(/^\/+/, '')
+  const filePath = resolve(managerDistDir, decodedPath)
+  const relativePath = relative(managerDistDir, filePath)
+
+  if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
+    return null
+  }
+
+  return filePath
+}
+
+function contentTypeForPath(path) {
+  switch (extname(path)) {
+    case '.css':
+      return 'text/css; charset=utf-8'
+    case '.html':
+      return 'text/html; charset=utf-8'
+    case '.js':
+    case '.mjs':
+      return 'text/javascript; charset=utf-8'
+    case '.json':
+    case '.map':
+      return 'application/json; charset=utf-8'
+    case '.svg':
+      return 'image/svg+xml'
+    case '.wasm':
+      return 'application/wasm'
+    default:
+      return 'application/octet-stream'
   }
 }
 

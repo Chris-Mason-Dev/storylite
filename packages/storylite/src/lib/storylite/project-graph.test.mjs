@@ -13,7 +13,7 @@ import {
 } from '../../../bin/project-graph.mjs'
 
 describe('storylite project graph', () => {
-  it('compiles home markdown frontmatter and content with mdsvex', async () => {
+  it('renders home markdown frontmatter and content', async () => {
     const home = await parseHomeMarkdown(`---
 title: Demo Home
 description: Welcome page

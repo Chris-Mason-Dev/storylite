@@ -5,5 +5,9 @@ export default function svelteRenderer() {
     name: 'svelte',
     client: '@storylite/renderer-svelte/client',
     static: '@storylite/renderer-svelte/static',
+    vitePlugins: async () => {
+      const { svelte } = await import('@sveltejs/vite-plugin-svelte')
+      return [svelte()]
+    },
   })
 }

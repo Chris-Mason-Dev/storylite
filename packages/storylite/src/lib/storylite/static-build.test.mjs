@@ -1,30 +1,48 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
-import {
-  injectPrerenderedAppHtml,
-  loadCss,
-  rewritePublicAssetUrls,
-} from '../../../bin/static-build.mjs'
+import { emitManagerShell, loadCss, rewritePublicAssetUrls } from '../../../bin/static-build.mjs'
 
 describe('storylite static build', () => {
-  it('injects prerendered manager head and html into the built shell', () => {
-    const html = injectPrerenderedAppHtml(
-      '<html><head><!--app-head--></head><body><div id="app"><!--app-html--></div><script type="module" src="./assets/app.js"></script></body></html>',
-      {
-        head: '',
-        html: '<main class="storylite-shell"><article class="home-page"><h1>Demo Home</h1></article></main>',
-      },
-      '.home-page{color:red}',
-    )
+  it('copies the prebuilt manager shell and applies manager customization', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-manager-shell-'))
+    const managerDistDir = join(root, 'manager')
+    const outDir = join(root, 'out')
 
-    expect(html).toContain('<style id="storylite-manager-custom-css">')
-    expect(html).toContain('<h1>Demo Home</h1>')
-    expect(html).toContain('<script type="module" src="./assets/app.js"></script>')
-    expect(html).not.toContain('<!--app-head-->')
-    expect(html).not.toContain('<!--app-html-->')
+    try {
+      await mkdir(join(managerDistDir, 'storylite-assets'), { recursive: true })
+      await writeFile(
+        join(managerDistDir, 'index.html'),
+        '<html><head><title>StoryLite</title></head><body><div id="app"></div><script type="module" src="./storylite-assets/app.js"></script></body></html>',
+      )
+      await writeFile(join(managerDistDir, 'storylite-assets/app.js'), 'export {}')
+
+      await emitManagerShell({
+        managerDistDir,
+        outDir,
+        manager: {
+          htmlAttrs: { lang: 'es' },
+          bodyAttrs: { 'data-manager': 'custom' },
+          headHtml: '<meta name="manager" content="custom">',
+          bodyStartHtml: '<div data-start></div>',
+          bodyEndHtml: '<div data-end></div>',
+        },
+      })
+
+      const html = await readFile(join(outDir, 'index.html'), 'utf8')
+      const asset = await readFile(join(outDir, 'storylite-assets/app.js'), 'utf8')
+
+      expect(html).toContain('<html lang="es">')
+      expect(html).toContain('<body data-manager="custom">')
+      expect(html).toContain('<meta name="manager" content="custom">')
+      expect(html).toContain('<div data-start></div>')
+      expect(html).toContain('<div data-end></div>')
+      expect(asset).toBe('export {}')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
   })
 
   it('loads static story css through vite transforms', async () => {
