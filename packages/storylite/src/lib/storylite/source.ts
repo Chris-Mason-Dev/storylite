@@ -40,14 +40,13 @@ export function resolveStorySource(story: StoryLiteStory, args: StoryArgs): stri
 
   const componentName = story.sourceComponentName
   if (componentName && componentRenderers.has(story.renderer)) {
+    const componentSource = renderComponentSource(story.renderer, componentName, args)
+
     if (story.render && story.component === undefined) {
-      return (
-        resolveRenderOutputSource(story, args, componentName) ??
-        renderComponentSource(story.renderer, componentName, args)
-      )
+      return resolveRenderOutputSource(story, args, componentName) ?? componentSource
     }
 
-    return renderComponentSource(story.renderer, componentName, args)
+    return componentSource
   }
 
   return null

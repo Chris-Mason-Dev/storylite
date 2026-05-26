@@ -30,13 +30,11 @@ optional framework renderer adapters without the full Storybook addon platform.
 
 ## Install
 
-Install StoryLite in the package that owns your stories:
-
 ```sh
 pnpm add -D @storylite/storylite
 ```
 
-Add a framework adapter only when you need one:
+Add adapter packages only for the frameworks you use:
 
 ```sh
 pnpm add -D @storylite/renderer-react
@@ -46,100 +44,33 @@ pnpm add -D @storylite/renderer-vue
 pnpm add -D @storylite/renderer-solid
 ```
 
-Renderer adapters keep framework-specific tooling out of `@storylite/storylite`. Install the
-framework peers only for adapters you configure; for example React projects install `react` and
-`react-dom`, Svelte projects install `svelte`, and Vue/Solid projects install their renderer package
-plus the Vite plugin peer listed by that package.
-
-Add scripts:
-
-```json
-{
-  "scripts": {
-    "storylite": "storylite dev",
-    "storylite:build": "storylite build",
-    "storylite:preview": "storylite preview"
-  }
-}
-```
-
-## Quick Start
-
-Create `.storylite/config.ts`:
-
-```ts
-import { defineConfig } from '@storylite/storylite'
-
-export default defineConfig({
-  stories: ['./src/**/*.stories.ts'],
-  css: ['./src/styles.css'],
-})
-```
-
-Create a story:
-
-```ts
-import type { StoryLiteMeta, StoryLiteStoryDefinition } from '@storylite/storylite'
-
-export default {
-  title: 'Components/Button',
-} satisfies StoryLiteMeta
-
-export const Primary = {
-  args: {
-    label: 'Save changes',
-  },
-  argTypes: {
-    label: { control: 'text' },
-  },
-  render: (args) => `<button>${args.label}</button>`,
-} satisfies StoryLiteStoryDefinition<{ label: string }>
-```
-
-Run StoryLite:
-
-```sh
-pnpm storylite
-```
-
-Build static output:
-
-```sh
-pnpm storylite:build
-```
-
-`storylite build` writes `dist-storylite/index.html` plus one default-args static page per story at
-`dist-storylite/stories/<story-id>/index.html`.
+Install the framework peers required by each adapter, such as `react` and `react-dom` for React.
 
 ## CLI
 
 ```sh
-storylite dev --port 4103 --host 127.0.0.1
-storylite build --base /docs/
-storylite preview --port 4103 --base /docs/
+storylite dev
+storylite build
+storylite preview
 ```
 
-## Framework Adapters
+## Documentation
 
-StoryLite ships built-in support for HTML strings, DOM nodes, document fragments, and custom
-elements. Framework support is opt-in:
+- [Quick start](https://github.com/itsjavi/storylite#quick-start)
+- [Framework adapters](https://github.com/itsjavi/storylite#framework-adapters)
+- [Story format](https://github.com/itsjavi/storylite#story-format)
+- [Source snippets](https://github.com/itsjavi/storylite#source-snippets)
+- [Static output](https://github.com/itsjavi/storylite#storylite-build)
 
-```ts
-import { defineConfig } from '@storylite/storylite'
-import react from '@storylite/renderer-react'
+## Source Snippets
 
-export default defineConfig({
-  stories: ['./src/**/*.stories.tsx'],
-  css: ['./src/styles.css'],
-  renderers: [react()],
-})
-```
-
-Adapters own their client renderer, optional static renderer, and adapter-specific Vite plugins.
-Changing renderer adapters in `.storylite/config.ts` requires restarting `storylite dev`.
+The `Copy snippet` action appears when a story has an explicit `source`, a copyable web-component
+tag, or a framework renderer plus stable component metadata. Framework adapter registration alone
+does not select a renderer for every story. See
+[Source snippets](https://github.com/itsjavi/storylite#source-snippets) for the exact conditions.
 
 ## Links
 
 - Repository: [github.com/itsjavi/storylite](https://github.com/itsjavi/storylite)
-- Full README: [github.com/itsjavi/storylite#readme](https://github.com/itsjavi/storylite#readme)
+- Demo site: [itsjavi.com/storylite](https://itsjavi.com/storylite)
 - Issues: [github.com/itsjavi/storylite/issues](https://github.com/itsjavi/storylite/issues)

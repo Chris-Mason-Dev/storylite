@@ -430,9 +430,20 @@ export const Primary = {
 
 ### Source Snippets
 
-StoryLite can copy ready-to-use source snippets from the preview toolbar. It generates snippets
-automatically for stories with reliable source metadata, including web component stories with a tag
-name and framework stories that reference a component from the story source.
+StoryLite can copy ready-to-use source snippets from the controls sidebar. The `Copy snippet` button
+is shown only when StoryLite can resolve a reliable snippet:
+
+- An explicit `source` string or callback is defined on the default export or named story.
+- A `web-components` story uses a string `component` tag name.
+- A framework story has `parameters.renderer` set to `react`, `preact`, `svelte`, `vue`, `solid`, or
+  another adapter renderer.
+- That framework story also has a statically named component in source, such as `component: Button`,
+  `component: UI.Button`, `<Button />`, or `<UI.Button />`.
+
+Registering a renderer adapter in `.storylite/config.ts` only makes that renderer available. Each
+framework story still needs `parameters: { renderer: 'react' }` or the matching adapter renderer,
+usually on the default export. If a story normalizes to `html`, uses a dynamic component expression,
+or otherwise lacks stable component metadata, the copy action is hidden unless `source` is provided.
 
 When automatic generation is not enough, override the copied snippet with `source` on the default
 export or a named story. A story-level `source` takes precedence over a default export `source`.

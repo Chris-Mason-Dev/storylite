@@ -143,6 +143,19 @@ describe('resolveStorySource', () => {
     ).toBe('<ReactButton label={"Save"} disabled={true} />')
   })
 
+  it('falls back to current args when render output cannot be inspected', () => {
+    expect(
+      resolveStorySource(
+        story({
+          renderer: 'react',
+          sourceComponentName: 'Card',
+          render: () => ({ props: { title: 'Ignored render props' } }),
+        }),
+        { eyebrow: 'Smoke', title: 'Fallback args' },
+      ),
+    ).toBe('<Card eyebrow={"Smoke"} title={"Fallback args"} />')
+  })
+
   it('uses stable source metadata instead of minified runtime component names', () => {
     function bs() {}
 
