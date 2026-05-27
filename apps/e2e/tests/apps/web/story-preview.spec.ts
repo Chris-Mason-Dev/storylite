@@ -7,10 +7,10 @@ test('button story renders in the isolated preview iframe', async ({ page }) => 
   await expectStoryShell(page, 'Button')
 
   const frame = page.frameLocator(PREVIEW_IFRAME)
-  const button = frame.locator('.demo-btn')
+  const button = frame.locator('.demo-btn').first()
 
   await expectHash(page).toBe('#/story/basic--button')
-  await expect(button).toHaveText('Save changes')
+  await expect(button).toHaveText('Run storylite build')
   await expect(button).toHaveAttribute('data-variant', 'primary')
 })
 
@@ -19,20 +19,20 @@ test('controls update story args inside the iframe and reset to defaults', async
   await expectStoryShell(page, 'Button')
 
   await control(page, 'label').locator('input').fill('Ship preview')
-  await control(page, 'variant').locator('select').selectOption('danger')
+  await control(page, 'variant').locator('select').selectOption('secondary')
 
-  const button = page.frameLocator(PREVIEW_IFRAME).locator('.demo-btn')
+  const button = page.frameLocator(PREVIEW_IFRAME).locator('.demo-btn').first()
   await expect(button).toHaveText('Ship preview')
-  await expect(button).toHaveAttribute('data-variant', 'danger')
+  await expect(button).toHaveAttribute('data-variant', 'secondary')
 
   await page.getByRole('button', { name: 'Reset controls' }).click()
-  await expect(button).toHaveText('Save changes')
+  await expect(button).toHaveText('Run storylite build')
   await expect(button).toHaveAttribute('data-variant', 'primary')
 })
 
 test('field story exposes typed controls and renders accessible input markup', async ({ page }) => {
   await page.goto('/')
-  await openStory(page, 'Field html', 'basic--field')
+  await openStory(page, 'Field', 'basic--field')
   await expectStoryShell(page, 'Field')
 
   await control(page, 'label').locator('input').fill('Search terms')
@@ -50,8 +50,10 @@ test('unknown story ids fall back to the first story without changing the URL', 
   await page.goto('/#/story/does-not-exist')
 
   await expectHash(page).toBe('#/story/does-not-exist')
-  await expectStoryShell(page, 'Badge')
-  await expect(page.frameLocator(PREVIEW_IFRAME).locator('.demo-badge')).toHaveText('Baseline 2025')
+  await expectStoryShell(page, 'Button')
+  await expect(page.frameLocator(PREVIEW_IFRAME).locator('.demo-btn').first()).toHaveText(
+    'Run storylite build',
+  )
 })
 
 function control(page: import('@playwright/test').Page, name: string) {

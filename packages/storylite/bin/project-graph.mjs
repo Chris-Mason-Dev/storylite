@@ -15,6 +15,7 @@ export const projectModulePath = '/project.js'
 
 const defaultConfig = { stories: ['./src/**/*.stories.{ts,tsx,js,jsx}'], css: [] }
 const builtinRenderers = new Set(['html', 'web-components'])
+const reservedExports = new Set(['default', '__esModule'])
 const conventionFileNames = [
   'manager-head.html',
   'manager-body-start.html',
@@ -69,9 +70,10 @@ export async function loadManifest(root, server = null) {
   const configPath = findConfigPath(root)
   const config = await loadStoryliteProjectConfig(root, server, configPath)
   const storyFiles = await resolveStoryFiles(root, config.stories ?? defaultConfig.stories)
-  const [storyExportNamesByFile, storySourceMetadataByFile] = await Promise.all([
-    loadStoryExportNamesByFile(root, storyFiles),
+  const storyExportNamesByFile = await loadStoryExportNamesByFile(root, storyFiles)
+  const [storySourceMetadataByFile, storyStaticMetadataByFile] = await Promise.all([
     loadStorySourceMetadataByFile(root, storyFiles),
+    loadStoryStaticMetadataByFile(root, storyFiles, storyExportNamesByFile),
   ])
   const cssFiles = resolveFiles(root, config.css ?? [])
   const publicDir = resolvePublicDir(root, config.publicDir)
@@ -87,6 +89,7 @@ export async function loadManifest(root, server = null) {
     storyFiles,
     storyExportNamesByFile,
     storySourceMetadataByFile,
+    storyStaticMetadataByFile,
     cssFiles,
     publicDir,
     setupFile,
@@ -142,31 +145,37 @@ export async function resolveStoryliteProjectPlugins(
 }
 
 export function generateProjectModuleCode(manifest, options = {}) {
+  const useStaticStoryMetadata = options.includeStoryModules === 'metadata'
   const storyImports =
     options.includeStoryModules === false
       ? ''
-      : manifest.storyFiles
-          .map(
-            (file, index) =>
-              `import * as storyModule${index} from ${JSON.stringify(fileUrl(file))};`,
-          )
-          .join('\n')
+      : useStaticStoryMetadata
+        ? ''
+        : manifest.storyFiles
+            .map(
+              (file, index) =>
+                `import * as storyModule${index} from ${JSON.stringify(fileUrl(file))};`,
+            )
+            .join('\n')
   const storyMap =
     options.includeStoryModules === false
       ? ''
-      : manifest.storyFiles
-          .map(
-            (file, index) =>
-              `${JSON.stringify(relative(manifest.projectRoot, file))}: storyModule${index}`,
-          )
-          .join(',\n')
+      : useStaticStoryMetadata
+        ? formatStaticStoryModuleMap(manifest)
+        : manifest.storyFiles
+            .map((file, index) => {
+              const importPath = relative(manifest.projectRoot, file).replaceAll('\\', '/')
+              return `${JSON.stringify(importPath)}: storyModule${index}`
+            })
+            .join(',\n')
   const cssImports = manifest.cssFiles
     .map((file, index) => `import css${index} from ${JSON.stringify(`${fileUrl(file)}?inline`)};`)
     .join('\n')
   const cssList = manifest.cssFiles.map((_, index) => `css${index}`).join(', ')
-  const setupImport = manifest.setupFile
-    ? `import { setupPreview as importedSetupPreview } from ${JSON.stringify(fileUrl(manifest.setupFile))};`
-    : 'const importedSetupPreview = undefined;'
+  const setupImport =
+    options.includeSetupPreview === false || !manifest.setupFile
+      ? 'const importedSetupPreview = undefined;'
+      : `import { setupPreview as importedSetupPreview } from ${JSON.stringify(fileUrl(manifest.setupFile))};`
   const rendererClientLoaders =
     options.includeRendererClientLoaders === false
       ? ''
@@ -202,6 +211,23 @@ export const managerHtml = ${JSON.stringify(manifest.manager)};
 export const home = ${JSON.stringify(manifest.home)};
 export const isStaticBuild = ${JSON.stringify(isStaticBuild)};
 export const staticStoriesBase = ${JSON.stringify('./stories/')};`
+}
+
+function formatStaticStoryModuleMap(manifest) {
+  return Object.entries(manifest.storyStaticMetadataByFile ?? {})
+    .map(([importPath, metadata]) => {
+      const exportNames = manifest.storyExportNamesByFile?.[importPath] ?? []
+      const properties = [`default: ${JSON.stringify(metadata.default ?? {})}`]
+
+      for (const exportName of exportNames) {
+        properties.push(
+          `${JSON.stringify(exportName)}: ${JSON.stringify(metadata.stories?.[exportName] ?? {})}`,
+        )
+      }
+
+      return `${JSON.stringify(importPath)}: {${properties.join(',')}}`
+    })
+    .join(',\n')
 }
 
 export function fileUrl(file) {
@@ -325,6 +351,24 @@ async function loadStorySourceMetadataByFile(root, storyFiles) {
   return Object.fromEntries(entries)
 }
 
+async function loadStoryStaticMetadataByFile(root, storyFiles, exportNamesByFile) {
+  const entries = await Promise.all(
+    storyFiles.map(async (file) => {
+      const importPath = relative(root, file).replaceAll('\\', '/')
+      return [
+        importPath,
+        extractStoryStaticMetadata(
+          await readFile(file, 'utf8'),
+          file,
+          exportNamesByFile[importPath] ?? [],
+        ),
+      ]
+    }),
+  )
+
+  return Object.fromEntries(entries)
+}
+
 export async function extractStoryExportNames(source, file = 'story.stories.ts') {
   let ast
 
@@ -405,6 +449,40 @@ export function extractStorySourceMetadata(source, file = 'story.stories.tsx') {
   return {
     ...(metaComponentName ? { metaComponentName } : {}),
     ...(Object.keys(storyComponentNames).length > 0 ? { storyComponentNames } : {}),
+  }
+}
+
+export function extractStoryStaticMetadata(source, file = 'story.stories.tsx', exportNames = []) {
+  let ast
+
+  try {
+    ast = parse(source, {
+      sourceType: 'module',
+      plugins: babelParserPluginsForFile(file),
+      errorRecovery: true,
+    })
+  } catch {
+    return { default: {}, stories: {} }
+  }
+
+  const declarations = collectTopLevelDeclarations(ast.program.body)
+  const defaultMeta = extractDefaultStoryMeta(ast.program.body, declarations)
+  const exportedStories = collectExportedStoryExpressions(ast.program.body, declarations)
+  const orderedExportNames = exportNames.length ? exportNames : Array.from(exportedStories.keys())
+  const stories = {}
+
+  for (const exportName of orderedExportNames) {
+    if (reservedExports.has(exportName)) {
+      continue
+    }
+
+    const storyMeta = extractStoryExportStaticMeta(exportedStories.get(exportName), declarations)
+    stories[exportName] = storyMeta
+  }
+
+  return {
+    default: defaultMeta,
+    stories,
   }
 }
 
@@ -537,6 +615,109 @@ function extractMetaComponentName(statements, declarations) {
   }
 
   return null
+}
+
+function extractDefaultStoryMeta(statements, declarations) {
+  for (const statement of statements) {
+    if (statement.type !== 'ExportDefaultDeclaration') {
+      continue
+    }
+
+    const expression = resolveDeclarationExpression(statement.declaration, declarations)
+    if (expression?.type !== 'ObjectExpression') {
+      return {}
+    }
+
+    return {
+      ...(staticStringProperty(expression, 'title')
+        ? { title: staticStringProperty(expression, 'title') }
+        : {}),
+      ...(extractStaticParameters(expression, declarations)
+        ? { parameters: extractStaticParameters(expression, declarations) }
+        : {}),
+    }
+  }
+
+  return {}
+}
+
+function collectExportedStoryExpressions(statements, declarations) {
+  const stories = new Map()
+
+  for (const statement of statements) {
+    if (statement.type !== 'ExportNamedDeclaration') {
+      continue
+    }
+
+    if (statement.declaration?.type === 'VariableDeclaration') {
+      for (const declarator of statement.declaration.declarations) {
+        if (declarator.id?.type === 'Identifier') {
+          stories.set(declarator.id.name, declarator.init)
+        }
+      }
+      continue
+    }
+
+    if (statement.declaration?.type === 'FunctionDeclaration' && statement.declaration.id?.name) {
+      stories.set(statement.declaration.id.name, statement.declaration)
+      continue
+    }
+
+    for (const specifier of statement.specifiers ?? []) {
+      const exportedName = exportNameFromSpecifier(specifier)
+      const localName = specifier.local?.name
+
+      if (exportedName && localName) {
+        stories.set(exportedName, declarations.get(localName))
+      }
+    }
+  }
+
+  return stories
+}
+
+function extractStoryExportStaticMeta(node, declarations) {
+  const expression = resolveDeclarationExpression(node, declarations)
+
+  if (expression?.type !== 'ObjectExpression') {
+    return {}
+  }
+
+  return {
+    ...(staticStringProperty(expression, 'name')
+      ? { name: staticStringProperty(expression, 'name') }
+      : {}),
+    ...(extractStaticParameters(expression, declarations)
+      ? { parameters: extractStaticParameters(expression, declarations) }
+      : {}),
+  }
+}
+
+function extractStaticParameters(objectExpression, declarations) {
+  const property = findObjectProperty(objectExpression, 'parameters')
+
+  if (property?.type !== 'ObjectProperty') {
+    return null
+  }
+
+  const value = resolveDeclarationExpression(property.value, declarations)
+  if (value?.type !== 'ObjectExpression') {
+    return null
+  }
+
+  const renderer = staticStringProperty(value, 'renderer')
+  return renderer ? { renderer } : null
+}
+
+function staticStringProperty(objectExpression, name) {
+  const property = findObjectProperty(objectExpression, name)
+
+  if (property?.type !== 'ObjectProperty') {
+    return null
+  }
+
+  const value = unwrapExpression(property.value)
+  return value?.type === 'StringLiteral' ? value.value : null
 }
 
 function collectDeclarationStoryComponentNames(target, declaration, declarations) {

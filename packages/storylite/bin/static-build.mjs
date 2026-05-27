@@ -17,12 +17,12 @@ import {
 
 const reservedExports = new Set(['default', '__esModule'])
 
-export async function emitManagerShell({ managerDistDir, outDir, manager }) {
+export async function emitManagerShell({ managerDistDir, outDir, manager, app }) {
   await cp(managerDistDir, outDir, { recursive: true })
 
   const indexPath = resolve(outDir, 'index.html')
   const template = await readFile(indexPath, 'utf8')
-  await writeFile(indexPath, transformBuiltManagerHtml(template, manager))
+  await writeFile(indexPath, transformBuiltManagerHtml(template, manager, { app }))
 }
 
 export async function emitStaticStoryPages({

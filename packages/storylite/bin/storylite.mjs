@@ -9,6 +9,7 @@ import { transformBuiltManagerHtml } from './customization.mjs'
 import { isBareImportSpecifier } from '../src/lib/storylite/utils.js'
 import {
   createProjectGraph,
+  fileUrl,
   generateProjectModuleCode,
   loadStoryliteProjectConfig,
   projectModulePath,
@@ -22,6 +23,7 @@ import { emitManagerShell, emitStaticStoryPages } from './static-build.mjs'
 const storyliteDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const appRoot = storyliteDir
 const managerDistDir = resolve(storyliteDir, 'dist/manager')
+const managerServerEntry = resolve(storyliteDir, 'dist/manager-server/entry-server.mjs')
 const projectRoot = process.cwd()
 const rawArgs = process.argv.slice(2)
 const command = rawArgs[0]
@@ -94,12 +96,20 @@ if (command === 'dev') {
   })
   const base = readBaseOption()
   const outDir = resolve(projectRoot, 'dist-storylite')
+  const prerenderedApp = await prerenderManagerApp({
+    appRoot,
+    projectRoot,
+    graph,
+    rendererPlugins: managerPlugins,
+    serverEntry: managerServerEntry,
+  })
 
   await rm(outDir, { recursive: true, force: true })
   await emitManagerShell({
     managerDistDir,
     outDir,
     manager: manifest.manager,
+    app: prerenderedApp,
   })
   await build({
     configFile: false,
@@ -259,6 +269,47 @@ async function serveManagerRequest(req, res, next, graph, managerDistDir) {
   res.statusCode = 200
   res.setHeader('Content-Type', contentTypeForPath(filePath))
   res.end(req.method === 'HEAD' ? undefined : content)
+}
+
+async function prerenderManagerApp({ appRoot, projectRoot, graph, rendererPlugins, serverEntry }) {
+  const server = await createServer({
+    configFile: false,
+    root: projectRoot,
+    appType: 'custom',
+    plugins: [
+      ...rendererPlugins,
+      storylitePlugin(projectRoot, graph, {
+        includeRendererClientLoaders: false,
+        includeSetupPreview: false,
+        includeStoryModules: 'metadata',
+      }),
+    ],
+    server: {
+      middlewareMode: true,
+      hmr: false,
+      ws: false,
+      fs: {
+        allow: [appRoot, projectRoot, resolve(projectRoot, '..'), resolve(projectRoot, '../..')],
+      },
+    },
+    optimizeDeps: {
+      entries: [],
+      noDiscovery: true,
+    },
+  })
+
+  try {
+    const module = await server.ssrLoadModule(fileUrl(serverEntry))
+
+    if (typeof module.render !== 'function') {
+      throw new Error('StoryLite manager server entry does not export a render function.')
+    }
+
+    return module.render()
+  } finally {
+    graph.setServer(null)
+    await server.close()
+  }
 }
 
 function resolveManagerAssetPath(managerDistDir, pathname) {

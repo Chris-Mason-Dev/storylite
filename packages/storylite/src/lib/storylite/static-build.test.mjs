@@ -45,6 +45,40 @@ describe('storylite static build', () => {
     }
   })
 
+  it('injects prerendered manager app html into the built shell', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-manager-prerender-'))
+    const managerDistDir = join(root, 'manager')
+    const outDir = join(root, 'out')
+
+    try {
+      await mkdir(managerDistDir, { recursive: true })
+      await writeFile(
+        join(managerDistDir, 'index.html'),
+        '<html><head><!--app-head--></head><body><div id="app"><!--app-html--></div></body></html>',
+      )
+
+      await emitManagerShell({
+        managerDistDir,
+        outDir,
+        manager: {},
+        app: {
+          head: '<meta name="app-head" content="true">',
+          html: '<aside aria-label="Stories"><a href="./stories/basic--button/">Button html</a></aside>',
+        },
+      })
+
+      const html = await readFile(join(outDir, 'index.html'), 'utf8')
+
+      expect(html).toContain('<meta name="app-head" content="true">')
+      expect(html).toContain('<aside aria-label="Stories">')
+      expect(html).toContain('href="./stories/basic--button/"')
+      expect(html).not.toContain('<!--app-head-->')
+      expect(html).not.toContain('<!--app-html-->')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
   it('loads static story css through vite transforms', async () => {
     const root = await mkdtemp(join(tmpdir(), 'storylite-static-css-'))
     const srcDir = join(root, 'src')

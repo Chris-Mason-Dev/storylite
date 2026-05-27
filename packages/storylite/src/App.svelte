@@ -120,6 +120,12 @@
     setRoute({ kind: 'story', storyId: story.id })
   }
 
+  function storyHref(story: StoryLiteStory): string {
+    return isStaticBuild
+      ? `${staticStoriesBase}${story.id}/`
+      : `#/story/${encodeURIComponent(story.id)}`
+  }
+
   function setRoute(nextRoute: Route): void {
     const hash = nextRoute.kind === 'home' ? '#/' : `#/${nextRoute.kind}/${nextRoute.storyId}`
 
@@ -185,6 +191,7 @@
       {groups}
       activeStoryId={activeStory?.id}
       bind:searchQuery
+      {storyHref}
       onSelectStory={selectStory}
     />
   {/if}

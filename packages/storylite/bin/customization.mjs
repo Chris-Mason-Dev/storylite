@@ -446,10 +446,11 @@ export function transformBuiltManagerHtml(html, manager, options = {}) {
     manager.bodyAttrs ?? defaultManagerBodyAttrs,
   )
   const withDevClient = options.viteClient ? injectViteClient(withAttrs) : withAttrs
+  const withApp = options.app ? injectPrerenderedApp(withDevClient, options.app) : withDevClient
 
   return injectBeforeBodyEnd(
     injectAfterBodyStart(
-      injectManagerHead(withDevClient, manager.headHtml ?? ''),
+      injectManagerHead(withApp, manager.headHtml ?? ''),
       manager.bodyStartHtml ?? '',
     ),
     manager.bodyEndHtml ?? '',
@@ -569,6 +570,10 @@ function injectViteClient(html) {
   return html.includes('/@vite/client')
     ? html
     : html.replace('</head>', '    <script type="module" src="/@vite/client"></script>\n  </head>')
+}
+
+function injectPrerenderedApp(html, app) {
+  return html.replace('<!--app-head-->', app.head ?? '').replace('<!--app-html-->', app.html ?? '')
 }
 
 function removeAttribute(attrs, name) {

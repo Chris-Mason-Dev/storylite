@@ -333,29 +333,37 @@
     gap: 6px;
   }
 
-  .story-group button:not(.story-group__toggle),
+  .story-group__link,
   .toolbar button,
   .brand__menu-button,
   .inspector__header button,
   .inspector__copy-button {
-    min-block-size: 32px;
     border: 1px solid transparent;
     border-radius: 7px;
     background: transparent;
     cursor: pointer;
   }
 
-  .story-group button:not(.story-group__toggle) {
+  .story-group__link {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-block-size: 1rem;
     padding: 7px 8px;
     font-size: 0.82rem;
     text-align: start;
   }
 
-  .story-group button:not(.story-group__toggle):hover:not(.active),
+  .toolbar button,
+  .brand__menu-button,
+  .inspector__header button,
+  .inspector__copy-button {
+    min-block-size: 32px;
+  }
+
+  .story-group__link:hover:not(.active),
+  .story-group__link:focus-visible:not(.active),
   .toolbar button:hover:not(.active),
   .brand__menu-button:hover,
   .inspector__header button:hover,
@@ -363,7 +371,7 @@
     background: var(--sl-panel-subtle);
   }
 
-  .story-group button:not(.story-group__toggle).active,
+  .story-group__link.active,
   .toolbar button.active,
   .inspector__copy-button.active {
     border-color: color-mix(in oklab, var(--sl-primary), transparent 35%);
@@ -371,7 +379,7 @@
     color: var(--sl-primary);
   }
 
-  .story-group button:not(.story-group__toggle) span {
+  .story-group__link span {
     min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;

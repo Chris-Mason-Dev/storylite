@@ -300,6 +300,51 @@ Use **StoryLite** with \`home.md\`.
     }
   })
 
+  it('generates metadata-only story modules without importing story files', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'storylite-metadata-module-'))
+    const storyliteDir = join(root, '.storylite')
+    const srcDir = join(root, 'src')
+    await mkdir(storyliteDir)
+    await mkdir(srcDir)
+
+    try {
+      await writeFile(
+        join(storyliteDir, 'config.ts'),
+        `export default {
+          stories: ['./src/**/*.stories.tsx'],
+        }`,
+      )
+      await writeFile(
+        join(srcDir, 'solid.stories.tsx'),
+        `const parameters = { renderer: 'solid' }
+export default {
+  title: 'Solid/Components',
+  parameters,
+}
+export const Button = {
+  name: 'Primary button',
+}
+export const Card = {}`,
+      )
+
+      const manifest = await loadManifest(root)
+      const moduleCode = generateProjectModuleCode(manifest, {
+        includeRendererClientLoaders: false,
+        includeSetupPreview: false,
+        includeStoryModules: 'metadata',
+      })
+
+      expect(moduleCode).not.toContain('import * as storyModule')
+      expect(moduleCode).toContain('"src/solid.stories.tsx": {default:')
+      expect(moduleCode).toContain('"title":"Solid/Components"')
+      expect(moduleCode).toContain('"parameters":{"renderer":"solid"}')
+      expect(moduleCode).toContain('"Button": {"name":"Primary button"}')
+      expect(moduleCode).toContain('"Card": {}')
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
+  })
+
   it('resolves project vite plugins from config', async () => {
     const firstPlugin = { name: 'first' }
     const secondPlugin = { name: 'second' }

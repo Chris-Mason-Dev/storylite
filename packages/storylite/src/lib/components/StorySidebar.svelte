@@ -27,6 +27,7 @@
     readonly stories: readonly StoryLiteStory[]
     readonly groups: readonly StoryGroup[]
     readonly activeStoryId: string | undefined
+    readonly storyHref: (story: StoryLiteStory) => string
     readonly onSelectStory: (story: StoryLiteStory) => void
     searchQuery: string
   }
@@ -36,6 +37,7 @@
     stories,
     groups,
     activeStoryId,
+    storyHref,
     onSelectStory,
     searchQuery = $bindable(),
   }: Props = $props()
@@ -78,6 +80,22 @@
       target instanceof HTMLSelectElement ||
       (target instanceof HTMLElement && target.isContentEditable)
     )
+  }
+
+  function handleStoryClick(event: MouseEvent, story: StoryLiteStory): void {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    onSelectStory(story)
   }
 </script>
 
@@ -212,13 +230,14 @@
           {#if expanded}
             <div class="story-group__stories" id={`${domId}-stories`}>
               {#each group.stories as story (`${story.importPath}:${story.exportName}`)}
-                <button
-                  type="button"
+                <a
+                  href={storyHref(story)}
+                  class="story-group__link"
                   class:active={story.id === activeStoryId}
-                  onclick={() => onSelectStory(story)}
+                  onclick={(event) => handleStoryClick(event, story)}
                 >
                   <span>{story.name}</span>
-                </button>
+                </a>
               {/each}
             </div>
           {/if}

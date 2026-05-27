@@ -5,27 +5,36 @@ const virtualProjectId = 'virtual:storylite/project'
 
 function storyliteProjectModule() {
   return {
-    name: 'storylite-manager-project-module',
+    name: 'storylite-manager-server-project-module',
     resolveId(id: string) {
       if (id !== virtualProjectId) {
         return null
       }
 
       return {
-        id: '../project.js',
+        id: virtualProjectId,
         external: true,
       }
     },
   }
 }
 
-// https://vite.dev/config/
 export default defineConfig({
-  base: './',
   plugins: [svelte(), storyliteProjectModule()],
   build: {
-    outDir: 'dist/manager',
+    ssr: 'src/entry-server.ts',
+    outDir: 'dist/manager-server',
     emptyOutDir: true,
-    assetsDir: 'storylite-assets',
+    copyPublicDir: false,
+    rolldownOptions: {
+      external: [virtualProjectId],
+      output: {
+        entryFileNames: 'entry-server.mjs',
+        chunkFileNames: '[name]-[hash].mjs',
+      },
+    },
+  },
+  ssr: {
+    noExternal: true,
   },
 })

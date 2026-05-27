@@ -51,7 +51,7 @@
   "scripts": {
     "dev": "node ./bin/storylite.mjs dev",
     "build": "pnpm build:public && pnpm build:manager",
-    "build:manager": "vite build --config manager.vite.config.ts",
+    "build:manager": "vite build --config manager.vite.config.ts && vite build --config manager.ssr.vite.config.ts",
     "build:public": "tsdown",
     "preview": "node ./bin/storylite.mjs preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",

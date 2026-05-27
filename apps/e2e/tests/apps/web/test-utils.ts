@@ -7,8 +7,9 @@ export const PREVIEW_IFRAME = 'iframe[title="StoryLite isolated preview"]'
 
 export async function expectHomeReady(page: Page): Promise<void> {
   await expectRouteDocumentReady(page)
-  await expect(page.getByRole('heading', { name: 'StoryLite Demo' })).toBeVisible()
-  await expect(page.getByText("StoryLite's component story workflow")).toBeVisible()
+  const home = page.locator('.home-page')
+  await expect(home.getByRole('heading', { name: 'StoryLite', exact: true })).toBeVisible()
+  await expect(home.getByText('lightweight, Vite-powered alternative')).toBeVisible()
 }
 
 export async function openStory(
@@ -16,7 +17,7 @@ export async function openStory(
   storyButtonName: string,
   storyId: string,
 ): Promise<void> {
-  await page.getByRole('button', { name: storyButtonName, exact: true }).click()
+  await page.getByRole('link', { name: storyButtonName, exact: true }).click()
   await expectHash(page).toBe(`#/story/${storyId}`)
   await expect(page.locator(PREVIEW_IFRAME)).toBeVisible()
 }

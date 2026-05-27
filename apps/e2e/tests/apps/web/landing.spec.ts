@@ -15,10 +15,11 @@ test('home page renders StoryLite project information and sidebar stories', asyn
   expect(response?.status() ?? 200).toBeLessThan(400)
   await expectHash(page).toBe('')
   await expectHomeReady(page)
-  await expect(page.getByText('5 stories')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'HTML/Components' })).toBeVisible()
-  for (const story of ['Button html', 'Card html', 'Field html', 'Badge html', 'Layout html']) {
-    await expect(page.getByRole('button', { name: story, exact: true })).toBeVisible()
+  const sidebar = page.getByRole('complementary', { name: 'Stories' })
+  await expect(sidebar.getByText('Component Stories', { exact: true })).toBeVisible()
+  await expect(sidebar.getByRole('button', { name: /CSS Demos/ })).toBeVisible()
+  for (const story of ['Button', 'Card', 'Field', 'Badge', 'Layout']) {
+    await expect(sidebar.getByRole('link', { name: story, exact: true })).toBeVisible()
   }
   await expectNoPageOverflow(page)
   expect(consoleErrors).toEqual([])
@@ -30,8 +31,8 @@ test('story search filters the sidebar without changing the current route', asyn
 
   await page.getByRole('searchbox', { name: 'Search stories' }).fill('badge')
 
-  await expect(page.getByRole('button', { name: 'Badge html', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Button html', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Badge', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Button', exact: true })).toHaveCount(0)
   await expectHash(page).toBe('')
 })
 
@@ -39,6 +40,6 @@ test('selecting a story opens the preview route', async ({ page }) => {
   await page.goto('/')
   await expectHomeReady(page)
 
-  await openStory(page, 'Button html', 'basic--button')
+  await openStory(page, 'Button', 'basic--button')
   await expect(page.locator('.inspector__header strong')).toHaveText('Button')
 })
