@@ -62,7 +62,7 @@
     "version": "node ../../scripts/sync-public-package-versions.mjs --stage"
   },
   "dependencies": {
-    "@babel/parser": "^7.29.3",
+    "@babel/parser": "^7.29.7",
     "@storylite/contracts": "workspace:*",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",

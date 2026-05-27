@@ -36,7 +36,7 @@
     "pkg:version": "node ./scripts/pkg-version.mjs"
   },
   "devDependencies": {
-    "oxfmt": "^0.51.0",
+    "oxfmt": "^0.52.0",
     "publint": "^0.3.21",
     "tsdown": "^0.22.0",
     "typescript": "^6.0.3",
