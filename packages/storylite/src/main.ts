@@ -13,4 +13,8 @@ const app = createApp(App, {
   target,
 })
 
+queueMicrotask(() => {
+  document.documentElement.removeAttribute('data-storylite-initial-hash-route')
+})
+
 export default app

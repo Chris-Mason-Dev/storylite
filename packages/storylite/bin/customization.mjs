@@ -478,6 +478,18 @@ export function renderManagerDocumentHead(options = {}) {
         }
       })()
     </script>`,
+    `<script>
+      ;(() => {
+        if (/^#\\/(?:story|canvas)\\//.test(location.hash)) {
+          document.documentElement.dataset.storyliteInitialHashRoute = ''
+        }
+      })()
+    </script>`,
+    `<style>
+      :root[data-storylite-initial-hash-route] #app {
+        visibility: hidden;
+      }
+    </style>`,
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
   ]
 
