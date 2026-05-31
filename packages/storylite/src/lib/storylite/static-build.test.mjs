@@ -167,12 +167,27 @@ describe('storylite static build', () => {
   it('loads preview setup from static standalone story pages', () => {
     const manifest = { setupFile: '/project/.storylite/setup.ts' }
 
-    expect(staticPreviewSetupScript(manifest, './')).toContain(
+    expect(staticPreviewSetupScript(manifest, './', '../../', { renderer: 'html' })).toContain(
       'import { setupPreview } from "../../project.js";',
     )
-    expect(staticPreviewSetupScript(manifest, '/storylite/')).toContain(
-      'import { setupPreview } from "/storylite/project.js";',
-    )
-    expect(staticPreviewSetupScript({ setupFile: null }, './')).toBe('')
+    expect(
+      staticPreviewSetupScript(manifest, '/storylite/', '../../', { renderer: 'html' }),
+    ).toContain('import { setupPreview } from "/storylite/project.js";')
+    expect(
+      staticPreviewSetupScript({ setupFile: null }, './', '../../', { renderer: 'html' }),
+    ).toBe('')
+  })
+
+  it('loads static web component story modules to define custom elements', () => {
+    const script = staticPreviewSetupScript({ setupFile: null }, './', '../../', {
+      importPath: 'src/components/web-components.stories.ts',
+      exportName: 'DropdownMenu',
+      renderer: 'web-components',
+    })
+
+    expect(script).toContain('import { setupPreview, storyModules } from "../../project.js";')
+    expect(script).toContain('storyModules["src/components/web-components.stories.ts"]')
+    expect(script).toContain('storyModule?.["DropdownMenu"]?.parameters')
+    expect(script).toContain('parameters.defineCustomElements?.(window)')
   })
 })

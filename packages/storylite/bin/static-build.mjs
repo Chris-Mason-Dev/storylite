@@ -173,7 +173,12 @@ async function renderStaticStoryPage(
     base,
     publicAssetFallbackBase,
   )
-  const previewSetupScript = staticPreviewSetupScript(manifest, base, publicAssetFallbackBase)
+  const previewSetupScript = staticPreviewSetupScript(
+    manifest,
+    base,
+    publicAssetFallbackBase,
+    story,
+  )
   const warning = result.warning
     ? `<p class="sl-static-warning">${escapeHtml(result.warning)}</p>`
     : ''
@@ -212,16 +217,29 @@ async function renderStaticStoryPage(
 </html>`
 }
 
-export function staticPreviewSetupScript(manifest, base, fallbackBase = '../../') {
-  if (!manifest.setupFile) {
+export function staticPreviewSetupScript(manifest, base, fallbackBase = '../../', story = null) {
+  const shouldLoadStoryModule = story?.renderer === 'web-components'
+
+  if (!manifest.setupFile && !shouldLoadStoryModule) {
     return ''
   }
 
   const projectModuleUrl = `${publicAssetBaseUrl(base, fallbackBase)}project.js`
+  const importBindings = shouldLoadStoryModule ? 'setupPreview, storyModules' : 'setupPreview'
+  const storyBootstrap = shouldLoadStoryModule
+    ? `
+      const storyModule = storyModules[${jsonForInlineScript(story.importPath)}];
+      const parameters = {
+        ...(storyModule?.default?.parameters ?? {}),
+        ...(storyModule?.[${jsonForInlineScript(story.exportName)}]?.parameters ?? {}),
+      };
+      parameters.defineCustomElements?.(window);`
+    : ''
 
   return `<script type="module">
-      import { setupPreview } from ${jsonForInlineScript(projectModuleUrl)};
+      import { ${importBindings} } from ${jsonForInlineScript(projectModuleUrl)};
       setupPreview?.(window);
+      ${storyBootstrap}
     </script>`
 }
 
