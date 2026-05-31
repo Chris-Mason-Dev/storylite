@@ -8,7 +8,6 @@ minimumReleaseAge: 2160
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - 'semver@6.3.1'
-  - 'tinyexec@1.2.2'
 
 packages:
   - 'apps/*'
