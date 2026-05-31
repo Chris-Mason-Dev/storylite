@@ -254,23 +254,33 @@
         <small>{component.storyCount}</small>
       </button>
     </h3>
-    {#if componentExpanded}
-      <div class="story-component__stories" id={`${componentId}-stories`}>
-        {#each component.stories as story (`${story.importPath}:${story.exportName}`)}
-          <a
-            href={storyHref(story)}
-            class="story-link"
-            class:active={story.id === activeStoryId}
-            onclick={(event) => handleStoryClick(event, story)}
-          >
-            <Diamond class="story-link__icon" size={10} aria-hidden="true" />
-            <span>{story.name}</span>
-          </a>
-        {/each}
-      </div>
-    {/if}
+    <div
+      class="story-component__stories story-tree__branch"
+      class:story-tree__branch--collapsed={!componentExpanded}
+      id={`${componentId}-stories`}
+    >
+      {#each component.stories as story (`${story.importPath}:${story.exportName}`)}
+        <a
+          href={storyHref(story)}
+          class="story-link"
+          class:active={story.id === activeStoryId}
+          onclick={(event) => handleStoryClick(event, story)}
+        >
+          <Diamond class="story-link__icon" size={10} aria-hidden="true" />
+          <span>{story.name}</span>
+        </a>
+      {/each}
+    </div>
   </section>
 {/snippet}
+
+<noscript>
+  <style>
+    .story-tree__branch--collapsed {
+      display: grid !important;
+    }
+  </style>
+</noscript>
 
 <aside class="sidebar" aria-label="Stories">
   <header class="brand">
@@ -375,13 +385,15 @@
                 <small>{item.storyCount}</small>
               </button>
             </h2>
-            {#if expanded}
-              <div class="story-group__components" id={`${domId}-components`}>
-                {#each item.components as component (componentKey(item.title, component.title))}
-                  {@render componentNode(component, item.title)}
-                {/each}
-              </div>
-            {/if}
+            <div
+              class="story-group__components story-tree__branch"
+              class:story-tree__branch--collapsed={!expanded}
+              id={`${domId}-components`}
+            >
+              {#each item.components as component (componentKey(item.title, component.title))}
+                {@render componentNode(component, item.title)}
+              {/each}
+            </div>
           </section>
         {:else}
           {@render componentNode(item, undefined)}

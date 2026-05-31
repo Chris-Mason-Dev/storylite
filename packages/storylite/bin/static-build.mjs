@@ -173,6 +173,7 @@ async function renderStaticStoryPage(
     base,
     publicAssetFallbackBase,
   )
+  const previewSetupScript = staticPreviewSetupScript(manifest, base, publicAssetFallbackBase)
   const warning = result.warning
     ? `<p class="sl-static-warning">${escapeHtml(result.warning)}</p>`
     : ''
@@ -197,6 +198,7 @@ async function renderStaticStoryPage(
         background: #fffbeb;
       }
     </style>
+    ${previewSetupScript}
   </head>
   <body${renderAttrs(manifest.preview.bodyAttrs)}>
     ${previewBodyStartHtml}
@@ -208,6 +210,19 @@ async function renderStaticStoryPage(
     <p class="sl-static-back"><a href="${relativeUrl(base, '../../index.html')}">Back to StoryLite</a></p>
   </body>
 </html>`
+}
+
+export function staticPreviewSetupScript(manifest, base, fallbackBase = '../../') {
+  if (!manifest.setupFile) {
+    return ''
+  }
+
+  const projectModuleUrl = `${publicAssetBaseUrl(base, fallbackBase)}project.js`
+
+  return `<script type="module">
+      import { setupPreview } from ${jsonForInlineScript(projectModuleUrl)};
+      setupPreview?.(window);
+    </script>`
 }
 
 async function resolvePublicAssetPaths(publicDir) {
@@ -314,6 +329,10 @@ function publicAssetBaseUrl(base, fallbackBase) {
   }
 
   return base.endsWith('/') ? base : `${base}/`
+}
+
+function jsonForInlineScript(value) {
+  return JSON.stringify(value).replaceAll('</', '<\\/')
 }
 
 async function renderStaticStory(story, staticRenderers) {

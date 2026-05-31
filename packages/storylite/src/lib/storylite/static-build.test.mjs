@@ -3,7 +3,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
-import { emitManagerShell, loadCss, rewritePublicAssetUrls } from '../../../bin/static-build.mjs'
+import {
+  emitManagerShell,
+  loadCss,
+  rewritePublicAssetUrls,
+  staticPreviewSetupScript,
+} from '../../../bin/static-build.mjs'
 
 describe('storylite static build', () => {
   it('copies the prebuilt manager shell and applies manager customization', async () => {
@@ -157,5 +162,17 @@ describe('storylite static build', () => {
     expect(rewritePublicAssetUrls(html, publicAssets, '/storylite/', '../../')).toContain(
       'src="/storylite/images/logo.png"',
     )
+  })
+
+  it('loads preview setup from static standalone story pages', () => {
+    const manifest = { setupFile: '/project/.storylite/setup.ts' }
+
+    expect(staticPreviewSetupScript(manifest, './')).toContain(
+      'import { setupPreview } from "../../project.js";',
+    )
+    expect(staticPreviewSetupScript(manifest, '/storylite/')).toContain(
+      'import { setupPreview } from "/storylite/project.js";',
+    )
+    expect(staticPreviewSetupScript({ setupFile: null }, './')).toBe('')
   })
 })

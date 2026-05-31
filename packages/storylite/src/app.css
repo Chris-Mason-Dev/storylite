@@ -375,6 +375,10 @@
     padding-inline-start: 22px;
   }
 
+  .story-tree__branch--collapsed {
+    display: none;
+  }
+
   .story-link,
   .toolbar button,
   .brand__menu-button,
