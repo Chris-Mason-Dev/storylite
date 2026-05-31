@@ -12,7 +12,7 @@ const parameters = {
 } satisfies StoryLiteParameters
 
 export default {
-  title: 'Web Components',
+  title: 'Examples/Web Components',
   parameters,
 } satisfies StoryLiteMeta
 

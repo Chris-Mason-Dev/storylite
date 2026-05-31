@@ -190,6 +190,8 @@
       {stories}
       {groups}
       activeStoryId={activeStory?.id}
+      hasHome={Boolean(home)}
+      isHomeActive={route.kind === 'home'}
       bind:searchQuery
       {storyHref}
       onSelectStory={selectStory}

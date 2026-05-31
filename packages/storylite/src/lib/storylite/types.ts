@@ -39,10 +39,21 @@ export type StoryModuleSourceMetadata = {
 
 export type StorySourceMetadataByImportPath = Record<string, StoryModuleSourceMetadata>
 
-export type StoryGroup = {
+export type StoryComponentGroup = {
+  readonly kind: 'component'
   readonly title: string
   readonly stories: readonly StoryLiteStory[]
+  readonly storyCount: number
 }
+
+export type StoryGroup = {
+  readonly kind: 'group'
+  readonly title: string
+  readonly components: readonly StoryComponentGroup[]
+  readonly storyCount: number
+}
+
+export type StoryTreeItem = StoryComponentGroup | StoryGroup
 
 export type StoryIdCollisionEntry = {
   readonly importPath: string

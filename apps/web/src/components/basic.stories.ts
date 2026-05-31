@@ -14,7 +14,7 @@ import layoutHtml from './layout.html?raw'
 const parameters: StoryLiteParameters = { css }
 
 export default {
-  title: 'CSS Demos',
+  title: 'Examples/Pure CSS',
   parameters,
 } satisfies StoryLiteMeta
 

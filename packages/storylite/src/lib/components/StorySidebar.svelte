@@ -1,32 +1,45 @@
 <script lang="ts">
   import Accessibility from '@lucide/svelte/icons/accessibility'
   import Bug from '@lucide/svelte/icons/bug'
+  import ChevronDown from '@lucide/svelte/icons/chevron-down'
+  import ChevronRight from '@lucide/svelte/icons/chevron-right'
+  import ComponentIcon from '@lucide/svelte/icons/component'
+  import Diamond from '@lucide/svelte/icons/diamond'
   import ExternalLink from '@lucide/svelte/icons/external-link'
   import Eye from '@lucide/svelte/icons/eye'
   import Flag from '@lucide/svelte/icons/flag'
+  import Folder from '@lucide/svelte/icons/folder'
   import Globe from '@lucide/svelte/icons/globe'
+  import Home from '@lucide/svelte/icons/home'
   import Info from '@lucide/svelte/icons/info'
   import Layout from '@lucide/svelte/icons/layout'
   import Menu from '@lucide/svelte/icons/menu'
   import Monitor from '@lucide/svelte/icons/monitor'
   import Moon from '@lucide/svelte/icons/moon'
   import PaintBucket from '@lucide/svelte/icons/paint-bucket'
-  import ChevronDown from '@lucide/svelte/icons/chevron-down'
-  import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import Search from '@lucide/svelte/icons/search'
   import Settings from '@lucide/svelte/icons/settings'
   import Sun from '@lucide/svelte/icons/sun'
   import Zap from '@lucide/svelte/icons/zap'
-  import type { StoryLiteIconName } from '../../public'
   import type { StoryLiteProjectUi } from 'virtual:storylite/project'
+  import type { StoryLiteIconName } from '../../public'
   import { storyliteSettings } from '../storylite/settings.svelte'
-  import type { StoryGroup, StoryLiteStory } from '../storylite/types'
+  import type {
+    StoryComponentGroup,
+    StoryGroup,
+    StoryLiteStory,
+    StoryTreeItem,
+  } from '../storylite/types'
+
+  const HOME_LINK_ENABLED = false
 
   type Props = {
     readonly projectUi: StoryLiteProjectUi
     readonly stories: readonly StoryLiteStory[]
-    readonly groups: readonly StoryGroup[]
+    readonly groups: readonly StoryTreeItem[]
     readonly activeStoryId: string | undefined
+    readonly hasHome: boolean
+    readonly isHomeActive: boolean
     readonly storyHref: (story: StoryLiteStory) => string
     readonly onSelectStory: (story: StoryLiteStory) => void
     searchQuery: string
@@ -37,30 +50,114 @@
     stories,
     groups,
     activeStoryId,
+    hasHome,
+    isHomeActive,
     storyHref,
     onSelectStory,
     searchQuery = $bindable(),
   }: Props = $props()
 
   let searchInput: HTMLInputElement | undefined = $state()
-  let collapsedGroups: Record<string, boolean> = $state({})
+  let collapsedGroups: Partial<Record<string, boolean>> = $state({})
+  let collapsedComponents: Partial<Record<string, boolean>> = $state({})
 
   const hasSearchQuery = $derived(searchQuery.trim().length > 0)
   const brandSubtitle = $derived(projectUi.brand.subtitle ?? `${stories.length} stories`)
+  const firstTreeItemKey = $derived(groups[0] ? treeItemKey(groups[0]) : '')
+  const firstComponentKey = $derived(firstComponentKeyFor(groups[0]))
 
-  function isGroupExpanded(title: string): boolean {
-    return hasSearchQuery || !collapsedGroups[title]
+  function isGroupExpanded(group: StoryGroup): boolean {
+    const key = treeItemKey(group)
+    const isCollapsed = collapsedGroups[key]
+
+    if (hasSearchQuery) {
+      return true
+    }
+
+    if (isCollapsed !== undefined) {
+      return !isCollapsed
+    }
+
+    return groupContainsActiveStory(group) || !isGroupCollapsedByDefault(key)
   }
 
-  function toggleGroup(title: string): void {
+  function toggleGroup(group: StoryGroup): void {
+    const key = treeItemKey(group)
+
     collapsedGroups = {
       ...collapsedGroups,
-      [title]: isGroupExpanded(title),
+      [key]: isGroupExpanded(group),
     }
+  }
+
+  function isComponentExpanded(
+    groupTitle: string | undefined,
+    component: StoryComponentGroup,
+  ): boolean {
+    const key = componentKey(groupTitle, component.title)
+    const isCollapsed = collapsedComponents[key]
+
+    if (hasSearchQuery) {
+      return true
+    }
+
+    if (isCollapsed !== undefined) {
+      return !isCollapsed
+    }
+
+    return componentContainsActiveStory(component) || !isComponentCollapsedByDefault(key)
+  }
+
+  function toggleComponent(groupTitle: string | undefined, component: StoryComponentGroup): void {
+    collapsedComponents = {
+      ...collapsedComponents,
+      [componentKey(groupTitle, component.title)]: isComponentExpanded(groupTitle, component),
+    }
+  }
+
+  function componentKey(groupTitle: string | undefined, componentTitle: string): string {
+    return groupTitle ? `${groupTitle}/${componentTitle}` : componentTitle
+  }
+
+  function treeItemKey(item: StoryTreeItem): string {
+    return item.kind === 'group' ? `group:${item.title}` : `component:${item.title}`
+  }
+
+  function firstComponentKeyFor(item: StoryTreeItem | undefined): string {
+    if (!item) {
+      return ''
+    }
+
+    if (item.kind === 'component') {
+      return componentKey(undefined, item.title)
+    }
+
+    const component = item.components[0]
+    return component ? componentKey(item.title, component.title) : ''
+  }
+
+  function isGroupCollapsedByDefault(key: string): boolean {
+    return hasHome || key !== firstTreeItemKey
+  }
+
+  function isComponentCollapsedByDefault(key: string): boolean {
+    return hasHome || key !== firstComponentKey
+  }
+
+  function groupContainsActiveStory(group: StoryGroup): boolean {
+    return group.components.some(componentContainsActiveStory)
+  }
+
+  function componentContainsActiveStory(component: StoryComponentGroup): boolean {
+    return Boolean(activeStoryId && component.stories.some((story) => story.id === activeStoryId))
   }
 
   function groupDomId(title: string): string {
     return `story-group-${title.replace(/[^a-zA-Z0-9_-]+/g, '-')}`
+  }
+
+  function componentDomId(groupTitle: string | undefined, componentTitle: string): string {
+    return `story-component-${componentKey(groupTitle, componentTitle).replace(/[^a-zA-Z0-9_-]+/g, '-')}`
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -135,11 +232,53 @@
   {/if}
 {/snippet}
 
+{#snippet componentNode(component: StoryComponentGroup, groupTitle: string | undefined)}
+  {@const componentExpanded = isComponentExpanded(groupTitle, component)}
+  {@const componentId = componentDomId(groupTitle, component.title)}
+  <section class="story-component" aria-labelledby={`${componentId}-heading`}>
+    <h3 id={`${componentId}-heading`}>
+      <button
+        type="button"
+        class="story-component__toggle"
+        aria-expanded={componentExpanded}
+        aria-controls={`${componentId}-stories`}
+        onclick={() => toggleComponent(groupTitle, component)}
+      >
+        {#if componentExpanded}
+          <ChevronDown class="story-tree__chevron" size={14} aria-hidden="true" />
+        {:else}
+          <ChevronRight class="story-tree__chevron" size={14} aria-hidden="true" />
+        {/if}
+        <ComponentIcon class="story-tree__type-icon" size={14} aria-hidden="true" />
+        <span>{component.title}</span>
+        <small>{component.storyCount}</small>
+      </button>
+    </h3>
+    {#if componentExpanded}
+      <div class="story-component__stories" id={`${componentId}-stories`}>
+        {#each component.stories as story (`${story.importPath}:${story.exportName}`)}
+          <a
+            href={storyHref(story)}
+            class="story-link"
+            class:active={story.id === activeStoryId}
+            onclick={(event) => handleStoryClick(event, story)}
+          >
+            <Diamond class="story-link__icon" size={10} aria-hidden="true" />
+            <span>{story.name}</span>
+          </a>
+        {/each}
+      </div>
+    {/if}
+  </section>
+{/snippet}
+
 <aside class="sidebar" aria-label="Stories">
   <header class="brand">
-    <div class="brand__mark" aria-hidden="true">{@html projectUi.brand.markHtml}</div>
+    <a href="#/" aria-label="Open home" class="brand__mark" aria-hidden="true"
+      >{@html projectUi.brand.markHtml}</a
+    >
     <div class="brand__content">
-      <a class="brand__title" href="#/" aria-label="Open StoryLite home">
+      <a class="brand__title" href="#/" aria-label="Open home">
         {@html projectUi.brand.titleHtml}
       </a>
       <span>{brandSubtitle}</span>
@@ -206,42 +345,47 @@
     </search>
 
     <nav class="story-tree">
-      {#each groups as group (group.title)}
-        {@const expanded = isGroupExpanded(group.title)}
-        {@const domId = groupDomId(group.title)}
-        <section class="story-group" aria-labelledby={`${domId}-heading`}>
-          <h2 id={`${domId}-heading`}>
-            <button
-              type="button"
-              class="story-group__toggle"
-              aria-expanded={expanded}
-              aria-controls={`${domId}-stories`}
-              onclick={() => toggleGroup(group.title)}
-            >
-              {#if expanded}
-                <ChevronDown size={14} aria-hidden="true" />
-              {:else}
-                <ChevronRight size={14} aria-hidden="true" />
-              {/if}
-              <span>{group.title}</span>
-              <small>{group.stories.length}</small>
-            </button>
-          </h2>
-          {#if expanded}
-            <div class="story-group__stories" id={`${domId}-stories`}>
-              {#each group.stories as story (`${story.importPath}:${story.exportName}`)}
-                <a
-                  href={storyHref(story)}
-                  class="story-group__link"
-                  class:active={story.id === activeStoryId}
-                  onclick={(event) => handleStoryClick(event, story)}
-                >
-                  <span>{story.name}</span>
-                </a>
-              {/each}
-            </div>
-          {/if}
-        </section>
+      {#if hasHome && HOME_LINK_ENABLED}
+        <a class="story-link story-tree__home" class:active={isHomeActive} href="#/">
+          <Home class="story-link__icon" size={13} aria-hidden="true" />
+          <span>Home</span>
+        </a>
+      {/if}
+
+      {#each groups as item (treeItemKey(item))}
+        {#if item.kind === 'group'}
+          {@const expanded = isGroupExpanded(item)}
+          {@const domId = groupDomId(item.title)}
+          <section class="story-group" aria-labelledby={`${domId}-heading`}>
+            <h2 id={`${domId}-heading`}>
+              <button
+                type="button"
+                class="story-group__toggle"
+                aria-expanded={expanded}
+                aria-controls={`${domId}-components`}
+                onclick={() => toggleGroup(item)}
+              >
+                {#if expanded}
+                  <ChevronDown class="story-tree__chevron" size={14} aria-hidden="true" />
+                {:else}
+                  <ChevronRight class="story-tree__chevron" size={14} aria-hidden="true" />
+                {/if}
+                <Folder class="story-tree__type-icon" size={14} aria-hidden="true" />
+                <span>{item.title}</span>
+                <small>{item.storyCount}</small>
+              </button>
+            </h2>
+            {#if expanded}
+              <div class="story-group__components" id={`${domId}-components`}>
+                {#each item.components as component (componentKey(item.title, component.title))}
+                  {@render componentNode(component, item.title)}
+                {/each}
+              </div>
+            {/if}
+          </section>
+        {:else}
+          {@render componentNode(item, undefined)}
+        {/if}
       {:else}
         <p class="empty story-tree__empty">No stories match.</p>
       {/each}

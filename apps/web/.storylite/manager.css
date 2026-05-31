@@ -1,0 +1,9 @@
+:root {
+  --sl-primary: hsl(210, 100%, 60%);
+}
+
+.brand__mark {
+  background: var(--sl-primary);
+  color: light-dark(white, black);
+  border: none;
+}

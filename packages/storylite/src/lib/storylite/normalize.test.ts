@@ -91,7 +91,7 @@ describe('normalizeStoryModule', () => {
 })
 
 describe('groupStories', () => {
-  it('keeps stories in normalized order within each group', () => {
+  it('keeps stories in normalized order within each component', () => {
     const stories = normalizeStoryModule(
       '../demo/button.stories.ts',
       {
@@ -102,9 +102,61 @@ describe('groupStories', () => {
       { exportNames: ['Zebra', 'Alpha'] },
     )
 
-    expect(groupStories(stories)[0]?.stories.map((story) => story.exportName)).toEqual([
-      'Zebra',
-      'Alpha',
+    expect(groupStories(stories)).toEqual([
+      {
+        kind: 'group',
+        title: 'CSS',
+        storyCount: 2,
+        components: [
+          {
+            kind: 'component',
+            title: 'Button',
+            stories,
+            storyCount: 2,
+          },
+        ],
+      },
+    ])
+  })
+
+  it('splits story titles into group and component levels', () => {
+    const stories = normalizeStoryModule('../demo/button.stories.ts', {
+      default: { title: 'UI/Button' },
+      Default: { render: () => '<button>Default</button>' },
+      Ghost: { render: () => '<button>Ghost</button>' },
+    })
+
+    expect(groupStories(stories)).toEqual([
+      {
+        kind: 'group',
+        title: 'UI',
+        storyCount: 2,
+        components: [
+          {
+            kind: 'component',
+            title: 'Button',
+            stories,
+            storyCount: 2,
+          },
+        ],
+      },
+    ])
+  })
+
+  it('keeps ungrouped components at the root level', () => {
+    const stories = normalizeStoryModule('../demo/button.stories.ts', {
+      default: { title: 'Button' },
+      Default: { render: () => '<button>Default</button>' },
+      Ghost: { render: () => '<button>Ghost</button>' },
+    })
+
+    expect(groupStories(stories)).toEqual([
+      {
+        kind: 'component',
+        title: 'Button',
+        stories,
+        storyCount: 2,
+      },
     ])
   })
 })

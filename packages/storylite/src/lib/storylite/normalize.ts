@@ -2,8 +2,8 @@ import type {
   StoryArgType,
   StoryArgTypes,
   StoryArgs,
+  StoryComponentGroup,
   StoryExport,
-  StoryGroup,
   StoryIdCollision,
   StoryIdOptions,
   StoryLiteRenderer,
@@ -14,8 +14,29 @@ import type {
   StoryNormalizationResult,
   StorySourceMetadataByImportPath,
   StoryParameters,
+  StoryTreeItem,
 } from './types'
 import { isRecord, kebabCase } from './utils.js'
+
+type MutableComponentGroup = {
+  readonly title: string
+  readonly stories: StoryLiteStory[]
+}
+
+type MutableStoryGroup = {
+  readonly title: string
+  readonly components: Map<string, MutableComponentGroup>
+}
+
+type MutableStoryTreeItem =
+  | {
+      readonly kind: 'component'
+      readonly component: MutableComponentGroup
+    }
+  | {
+      readonly kind: 'group'
+      readonly group: MutableStoryGroup
+    }
 
 const reservedExports = new Set(['default', '__esModule'])
 
@@ -102,19 +123,50 @@ export function normalizeStoryModule(
   return stories
 }
 
-export function groupStories(stories: readonly StoryLiteStory[]): readonly StoryGroup[] {
-  const groups = new Map<string, StoryLiteStory[]>()
+export function groupStories(stories: readonly StoryLiteStory[]): readonly StoryTreeItem[] {
+  const items: MutableStoryTreeItem[] = []
+  const rootComponents = new Map<string, MutableComponentGroup>()
+  const groups = new Map<string, MutableStoryGroup>()
 
   for (const story of stories) {
-    const group = groups.get(story.title) ?? []
-    group.push(story)
-    groups.set(story.title, group)
+    const path = storyTreePath(story.title)
+
+    if (!path.groupTitle) {
+      let component = rootComponents.get(path.componentTitle)
+
+      if (!component) {
+        component = { title: path.componentTitle, stories: [] }
+        rootComponents.set(path.componentTitle, component)
+        items.push({ kind: 'component', component })
+      }
+
+      component.stories.push(story)
+      continue
+    }
+
+    let group = groups.get(path.groupTitle)
+
+    if (!group) {
+      group = { title: path.groupTitle, components: new Map() }
+      groups.set(path.groupTitle, group)
+      items.push({ kind: 'group', group })
+    }
+
+    let component = group.components.get(path.componentTitle)
+
+    if (!component) {
+      component = { title: path.componentTitle, stories: [] }
+      group.components.set(path.componentTitle, component)
+    }
+
+    component.stories.push(story)
   }
 
-  return Array.from(groups.entries()).map(([title, group]) => ({
-    title,
-    stories: group,
-  }))
+  return items.map((item) =>
+    item.kind === 'component'
+      ? finalizeComponentGroup(item.component)
+      : finalizeStoryGroup(item.group),
+  )
 }
 
 export function storyId(
@@ -245,6 +297,46 @@ function normalizeTitle(title: string | undefined, importPath: string): string {
       ?.replace(/\.(stories|story)\.[cm]?[tj]sx?$/, '')
       .replaceAll('-', ' ') ?? 'Stories'
   )
+}
+
+function storyTreePath(title: string): { groupTitle?: string; componentTitle: string } {
+  const parts = title
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (parts.length === 0) {
+    return { componentTitle: 'Stories' }
+  }
+
+  if (parts.length === 1) {
+    return { componentTitle: parts[0] ?? 'Stories' }
+  }
+
+  return {
+    groupTitle: parts.slice(0, -1).join('/'),
+    componentTitle: parts.at(-1) ?? 'Stories',
+  }
+}
+
+function finalizeComponentGroup(component: MutableComponentGroup): StoryComponentGroup {
+  return {
+    kind: 'component',
+    title: component.title,
+    stories: component.stories,
+    storyCount: component.stories.length,
+  }
+}
+
+function finalizeStoryGroup(group: MutableStoryGroup): StoryTreeItem {
+  const components = Array.from(group.components.values()).map(finalizeComponentGroup)
+
+  return {
+    kind: 'group',
+    title: group.title,
+    components,
+    storyCount: components.reduce((count, component) => count + component.storyCount, 0),
+  }
 }
 
 function labelFromExportName(exportName: string): string {

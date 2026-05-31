@@ -240,6 +240,7 @@
   .brand span,
   .inspector__header span,
   .story-group small,
+  .story-component small,
   .story-meta dt {
     color: var(--sl-muted);
     font-size: 0.75rem;
@@ -248,17 +249,17 @@
   .story-tree {
     display: grid;
     align-content: start;
-    gap: 18px;
+    gap: 0;
     min-block-size: 0;
-    padding: 14px;
+    padding: 12px 10px 16px;
     overflow: auto;
   }
 
   .story-search {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: 9px;
+    padding: 10px 12px;
     border-block-end: 1px solid var(--sl-border);
     color: var(--sl-muted);
   }
@@ -266,13 +267,13 @@
   .story-search input {
     min-inline-size: 0;
     inline-size: 100%;
-    min-block-size: 30px;
+    min-block-size: 34px;
     border: 1px solid var(--sl-border);
-    border-radius: 7px;
-    padding-inline: 8px;
-    background: var(--sl-panel);
+    border-radius: 8px;
+    padding-inline: 10px;
+    background: color-mix(in oklab, var(--sl-panel), var(--sl-panel-subtle) 45%);
     color: var(--sl-text);
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 
   .story-search input:focus-visible {
@@ -282,58 +283,99 @@
 
   .story-group {
     display: grid;
-    gap: 6px;
+    gap: 3px;
   }
 
-  .story-group h2 {
+  .story-group h2,
+  .story-component h3 {
     margin: 0;
   }
 
-  .story-group__toggle {
+  .story-group__toggle,
+  .story-component__toggle {
     display: grid;
-    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-columns: 14px 16px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     box-sizing: border-box;
     inline-size: 100%;
-    min-block-size: 28px;
-    padding: 4px 6px;
+    min-block-size: 30px;
+    padding: 5px 7px;
     border: 1px solid transparent;
     border-radius: 6px;
     background: transparent;
-    color: var(--sl-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
+    color: color-mix(in oklab, var(--sl-muted), var(--sl-text) 12%);
     letter-spacing: 0;
     text-align: start;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
   .story-group__toggle:hover,
-  .story-group__toggle:focus-visible {
+  .story-group__toggle:focus-visible,
+  .story-component__toggle:hover,
+  .story-component__toggle:focus-visible {
     background: var(--sl-panel-subtle);
     outline: 0;
   }
 
-  .story-group__toggle span {
+  .story-group__toggle {
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+
+  .story-component__toggle {
+    font-size: 0.8rem;
+    font-weight: 650;
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 20%);
+  }
+
+  .story-tree__chevron {
+    color: var(--sl-muted);
+  }
+
+  .story-group__toggle .story-tree__type-icon {
+    color: color-mix(in oklab, var(--sl-primary), var(--sl-muted) 35%);
+  }
+
+  .story-component__toggle .story-tree__type-icon {
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 48%);
+  }
+
+  .story-group__toggle span,
+  .story-component__toggle span {
     min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .story-group__toggle small {
+  .story-group__toggle small,
+  .story-component__toggle small {
     font-size: 0.68rem;
     font-weight: 700;
   }
 
-  .story-group__stories {
+  .story-group__components {
     display: grid;
-    gap: 6px;
+    gap: 3px;
+    margin-inline-start: 14px;
+    padding-inline-start: 8px;
+    border-inline-start: 1px solid color-mix(in oklab, var(--sl-border), transparent 24%);
   }
 
-  .story-group__link,
+  .story-component {
+    display: grid;
+    gap: 2px;
+  }
+
+  .story-component__stories {
+    display: grid;
+    gap: 1px;
+    padding-inline-start: 22px;
+  }
+
+  .story-link,
   .toolbar button,
   .brand__menu-button,
   .inspector__header button,
@@ -344,15 +386,46 @@
     cursor: pointer;
   }
 
-  .story-group__link {
-    display: flex;
+  .story-link {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-block-size: 1rem;
-    padding: 7px 8px;
-    font-size: 0.82rem;
+    gap: 7px;
+    box-sizing: border-box;
+    min-block-size: 30px;
+    padding: 5px 8px;
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 18%);
+    font-size: 0.78rem;
+    line-height: 1.15;
     text-align: start;
+  }
+
+  .story-link__icon {
+    color: color-mix(in oklab, var(--sl-muted), transparent 8%);
+  }
+
+  .story-tree__home {
+    grid-template-columns: 13px 17px minmax(0, 1fr);
+    margin-block-end: 0px;
+    padding: 5px 7px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 650;
+
+    span {
+      color: color-mix(in oklab, var(--sl-muted), var(--sl-text) 12%);
+    }
+  }
+
+  .story-tree__home .story-link__icon {
+    grid-column: 2;
+    width: 15px;
+    height: 15px;
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 48%);
+  }
+
+  .story-tree__home span {
+    grid-column: 3;
   }
 
   .toolbar button,
@@ -362,8 +435,8 @@
     min-block-size: 32px;
   }
 
-  .story-group__link:hover:not(.active),
-  .story-group__link:focus-visible:not(.active),
+  .story-link:hover:not(.active),
+  .story-link:focus-visible:not(.active),
   .toolbar button:hover:not(.active),
   .brand__menu-button:hover,
   .inspector__header button:hover,
@@ -371,7 +444,7 @@
     background: var(--sl-panel-subtle);
   }
 
-  .story-group__link.active,
+  .story-link.active,
   .toolbar button.active,
   .inspector__copy-button.active {
     border-color: color-mix(in oklab, var(--sl-primary), transparent 35%);
@@ -379,7 +452,25 @@
     color: var(--sl-primary);
   }
 
-  .story-group__link span {
+  .story-link.active {
+    background: var(--sl-primary-soft);
+  }
+
+  .story-tree__home.active {
+    border-color: transparent;
+    background: transparent;
+    color: var(--sl-primary);
+
+    span {
+      color: inherit;
+    }
+  }
+
+  .story-link.active .story-link__icon {
+    color: currentColor;
+  }
+
+  .story-link span {
     min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
