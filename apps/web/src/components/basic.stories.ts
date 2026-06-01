@@ -105,7 +105,7 @@ export const Layout = {
     project: 'StoryLite web',
     eyebrow: 'Static preview',
     headline: 'A compact project surface for reviewing stories before release',
-    storyCount: '9',
+    storyCount: '10',
     rendererCount: '2',
   },
   render: template(layoutHtml),

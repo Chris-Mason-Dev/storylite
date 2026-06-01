@@ -150,7 +150,7 @@ export default {
   title: 'Components/Button',
 } satisfies StoryLiteMeta
 
-export const Primary = {
+export const Default = {
   args: {
     label: 'Save changes',
   },
@@ -405,6 +405,35 @@ export const Primary = {
 } satisfies StoryLiteStoryDefinition<ButtonArgs>
 ```
 
+### Single Story Files
+
+For a file with one primary story, keep the default export for metadata and use a named `Default`
+story export:
+
+```ts
+export default {
+  title: 'Components/Button',
+} satisfies StoryLiteMeta<ButtonArgs>
+
+export const Default = {
+  args: {
+    label: 'Save changes',
+  },
+  render: (args) => `<button>${args.label}</button>`,
+} satisfies StoryLiteStoryDefinition<ButtonArgs>
+```
+
+When a component has exactly one story export, StoryLite renders it as a single sidebar link instead
+of a component row plus a story row. A generated `Default` story uses the component title as the
+link label; a single story with another export or display name uses that story name. Add more named
+exports later when the component needs variants.
+
+```ts
+export const ReadyState = {
+  render: (args) => `<status-badge>${args.label}</status-badge>`,
+} satisfies StoryLiteStoryDefinition<{ label: string }>
+```
+
 ### Default Export
 
 | Field        | Description                                             |
@@ -414,7 +443,7 @@ export const Primary = {
 | `args`       | Default story args.                                     |
 | `argTypes`   | Control metadata.                                       |
 | `parameters` | Default story parameters.                               |
-| `source`     | Optional code snippet override for the copy action.     |
+| `source`     | Optional code snippet override string or callback.      |
 
 ### Named Story Exports
 
@@ -426,7 +455,7 @@ export const Primary = {
 | `argTypes`              | Arg types merged over default export arg types.     |
 | `parameters`            | Parameters merged over default export parameters.   |
 | `render(args, context)` | Story render function.                              |
-| `source`                | Optional story-specific code snippet override.      |
+| `source`                | Optional story-specific snippet string or callback. |
 
 ### Source Snippets
 
@@ -446,7 +475,9 @@ usually on the default export. If a story normalizes to `html`, uses a dynamic c
 or otherwise lacks stable component metadata, the copy action is hidden unless `source` is provided.
 
 When automatic generation is not enough, override the copied snippet with `source` on the default
-export or a named story. A story-level `source` takes precedence over a default export `source`.
+export or a named story. `source` can be a string, or a callback with the signature
+`(args, context) => string | null | undefined`. A story-level `source` takes precedence over a
+default export `source`.
 
 ```ts
 export default {

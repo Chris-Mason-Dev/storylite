@@ -404,8 +404,19 @@
     text-align: start;
   }
 
+  .story-link--component {
+    padding: 5px 7px;
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 20%);
+    font-size: 0.8rem;
+    font-weight: 650;
+  }
+
   .story-link__icon {
     color: color-mix(in oklab, var(--sl-muted), transparent 8%);
+  }
+
+  .story-link--component .story-link__icon {
+    color: color-mix(in oklab, var(--sl-text), var(--sl-muted) 48%);
   }
 
   .story-tree__home {

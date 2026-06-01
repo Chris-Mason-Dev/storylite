@@ -23,6 +23,7 @@
   import Zap from '@lucide/svelte/icons/zap'
   import type { StoryLiteProjectUi } from 'virtual:storylite/project'
   import type { StoryLiteIconName } from '../../public'
+  import { isSingleStoryComponent, singleStoryComponentLabel } from '../storylite/sidebar'
   import { storyliteSettings } from '../storylite/settings.svelte'
   import type {
     StoryComponentGroup,
@@ -260,18 +261,41 @@
       id={`${componentId}-stories`}
     >
       {#each component.stories as story (`${story.importPath}:${story.exportName}`)}
-        <a
-          href={storyHref(story)}
-          class="story-link"
-          class:active={story.id === activeStoryId}
-          onclick={(event) => handleStoryClick(event, story)}
-        >
-          <Diamond class="story-link__icon" size={10} aria-hidden="true" />
-          <span>{story.name}</span>
-        </a>
+        {@render storyLink(story, story.name, 'story')}
       {/each}
     </div>
   </section>
+{/snippet}
+
+{#snippet componentOrSingleStoryNode(
+  component: StoryComponentGroup,
+  groupTitle: string | undefined,
+)}
+  {#if isSingleStoryComponent(component)}
+    {@const story = component.stories[0]}
+    {#if story}
+      {@render storyLink(story, singleStoryComponentLabel(component), 'component')}
+    {/if}
+  {:else}
+    {@render componentNode(component, groupTitle)}
+  {/if}
+{/snippet}
+
+{#snippet storyLink(story: StoryLiteStory, label: string, kind: 'component' | 'story')}
+  <a
+    href={storyHref(story)}
+    class="story-link"
+    class:story-link--component={kind === 'component'}
+    class:active={story.id === activeStoryId}
+    onclick={(event) => handleStoryClick(event, story)}
+  >
+    {#if kind === 'component'}
+      <ComponentIcon class="story-link__icon" size={14} aria-hidden="true" />
+    {:else}
+      <Diamond class="story-link__icon" size={10} aria-hidden="true" />
+    {/if}
+    <span>{label}</span>
+  </a>
 {/snippet}
 
 <noscript>
@@ -391,12 +415,12 @@
               id={`${domId}-components`}
             >
               {#each item.components as component (componentKey(item.title, component.title))}
-                {@render componentNode(component, item.title)}
+                {@render componentOrSingleStoryNode(component, item.title)}
               {/each}
             </div>
           </section>
         {:else}
-          {@render componentNode(item, undefined)}
+          {@render componentOrSingleStoryNode(item, undefined)}
         {/if}
       {:else}
         <p class="empty story-tree__empty">No stories match.</p>

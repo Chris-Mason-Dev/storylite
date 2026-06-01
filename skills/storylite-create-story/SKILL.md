@@ -2,8 +2,8 @@
 name: storylite-create-story
 description:
   Create StoryLite component stories in consumer projects that use StoryLite public packages,
-  explaining StoryLite's CSF-like story format with examples from simple stories to advanced args,
-  argTypes, renderers, parameters, render context, CSS, and web components.
+  explaining StoryLite's CSF-like story format with examples from single-story files to advanced
+  args, argTypes, renderers, parameters, render context, CSS, and web components.
 metadata:
   short-description: Create StoryLite CSF-like stories
 ---
@@ -38,8 +38,9 @@ available, continue with the format summary and examples in this skill.
    select controls.
 5. Add a default export with shared `title`, optional `component`, shared `args`, shared `argTypes`,
    and shared `parameters`.
-6. Add named story exports as objects. Each export may provide `name`, `component`, `args`,
-   `argTypes`, `parameters`, and `render`.
+6. Add named story exports as objects. Use `export const Default = { ... }` for a file with one
+   primary story. Each export may provide `name`, `component`, `args`, `argTypes`, `parameters`,
+   `render`, and `source`.
 7. Keep examples practical: start with the default state, then add meaningful variants such as
    disabled, long content, error state, density, layout, or integration behavior.
 8. Do not add unsupported Storybook features. StoryLite stories do not support `play`, loaders,
@@ -54,6 +55,7 @@ Default export fields:
 - `args`: Default args merged into every story.
 - `argTypes`: Control metadata merged into every story.
 - `parameters`: Default story parameters merged into every story.
+- `source`: Optional code snippet override string or callback.
 
 Named story export fields:
 
@@ -63,16 +65,27 @@ Named story export fields:
 - `argTypes`: Arg type metadata merged over default export arg types.
 - `parameters`: Parameters merged over default export parameters.
 - `render(args, context)`: Story render function.
+- `source`: Optional story-specific snippet string or callback.
 
-Supported controls: `boolean`, `text`, `number`, `color`, and `select`. Controls may be declared as
-strings, such as `{ control: 'text' }`, or objects, such as
+`source` may be a literal string or a callback with the signature
+`(args, context) => string | null | undefined`. Use a string for fixed snippets and a callback when
+the snippet should reflect current control values or story context.
+
+Use a single `Default` export when a story file has one primary state. When a component has exactly
+one story export, StoryLite shows it as one sidebar link instead of a component row plus a story
+row. A generated `Default` story uses the component title as the link label; a single story with
+another export or display name uses that story name. Keep the default export for metadata; do not
+put the story itself in `export default`.
+
+Supported controls: `boolean`, `text`, `textarea`, `number`, `color`, and `select`. Controls may be
+declared as strings, such as `{ control: 'text' }`, or objects, such as
 `{ control: { type: 'select' }, options: ['primary', 'secondary'] }`. If no control is provided,
 StoryLite infers a simple control from the current arg value.
 
 Supported parameters:
 
-- `renderer`: `html`, `web-components`, or an adapter renderer such as `react`, `svelte`, `vue`, or
-  `solid`.
+- `renderer`: `html`, `web-components`, or an adapter renderer such as `react`, `preact`, `svelte`,
+  `vue`, or `solid`.
 - `css`: Per-story CSS string or array of strings.
 - `background`: Initial preview background value.
 - `defineCustomElements(window)`: Registers custom elements in the preview window.

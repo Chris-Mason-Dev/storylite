@@ -3,9 +3,12 @@
 These examples are intentionally generic. Adapt import paths, component names, CSS imports, and
 renderer names to the target package or app.
 
-## 1. Minimal HTML Story
+## 1. Minimal HTML Default Story
 
-Use this when the component is a plain HTML fragment and needs one editable text arg.
+Use this when the component is a plain HTML fragment and needs one editable text arg. For a file
+with one primary state, prefer `export const Default = { ... }`; StoryLite shows it as one sidebar
+link. If the single story uses another export or display name, StoryLite uses that story name for
+the link.
 
 ```ts
 import type { StoryLiteMeta, StoryLiteStoryDefinition } from '@storylite/storylite'
@@ -21,7 +24,7 @@ export default {
   },
 } satisfies StoryLiteMeta<ButtonArgs>
 
-export const Primary = {
+export const Default = {
   args: {
     label: 'Save changes',
   },
