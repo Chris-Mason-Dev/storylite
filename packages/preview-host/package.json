@@ -1,6 +1,6 @@
 {
   "name": "@storylite/preview-host",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Iframe bootstrap and live CSS mutation API for StoryLite",
   "homepage": "https://itsjavi.com/storylite",
   "bugs": {
