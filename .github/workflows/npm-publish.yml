@@ -72,4 +72,4 @@ jobs:
         run: pnpm test
 
       - name: Publish packages
-        run: pnpm pkg:release -- --provenance --no-git-checks
+        run: pnpm -r --filter "./packages/*" publish --access public --provenance --no-git-checks
