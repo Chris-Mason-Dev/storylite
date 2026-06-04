@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Exact release version to create, for example 1.5.4.'
+        description:
+          'Release bump or exact version to create: major, minor, patch, or a semver version like
+          1.0.1.'
         required: true
         type: string
 
@@ -45,12 +47,13 @@ jobs:
           TARGET_REF: ${{ github.event.pull_request.base.ref || github.ref_name }}
         run: |
           semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          bump_re='^(major|minor|patch)$'
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             release_argument="$MANUAL_VERSION"
 
-            if [[ ! "$release_argument" =~ $semver_re ]]; then
-              echo "::error title=Invalid release version::Expected an exact semver version like 1.5.4, got '$release_argument'."
+            if [[ ! "$release_argument" =~ $semver_re && ! "$release_argument" =~ $bump_re ]]; then
+              echo "::error title=Invalid release version::Expected major, minor, patch, or an exact semver version like 1.5.4; got '$release_argument'."
               exit 1
             fi
           else
@@ -153,7 +156,7 @@ jobs:
           } > release-notes.md
 
           gh release create "$RELEASE_VERSION" \
-            --title "v$RELEASE_VERSION" \
+            --title "$RELEASE_VERSION" \
             --notes-file release-notes.md
 
       - name: Publish summary

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Semver tag to publish, e.g. 1.5.4. Defaults to the selected ref.'
+        description: 'Semver tag to publish, e.g. 1.0.1. Defaults to the selected ref.'
         required: false
         type: string
 
@@ -72,4 +72,51 @@ jobs:
         run: pnpm test
 
       - name: Publish packages
-        run: pnpm -r --filter "./packages/*" publish --access public --provenance --no-git-checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          published=0
+          skipped=0
+          mapfile -t package_dirs < <(find packages -mindepth 2 -maxdepth 2 -name package.json -print | sort | xargs -n1 dirname)
+
+          for package_dir in "${package_dirs[@]}"; do
+            package_json="$package_dir/package.json"
+            name="$(node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).name" "$package_json")"
+            version="$(node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).version" "$package_json")"
+            private_package="$(node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8')).private === true ? 'true' : 'false'" "$package_json")"
+
+            if [[ "$private_package" == "true" ]]; then
+              echo "Skipping private package $name@$version."
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            package_version_url="$(node -e "process.stdout.write('https://registry.npmjs.org/' + encodeURIComponent(process.argv[1]) + '/' + encodeURIComponent(process.argv[2]))" "$name" "$version")"
+            status="$(curl -sS -o /tmp/npm-package-version.json -w '%{http_code}' "$package_version_url")"
+
+            if [[ "$status" == "200" ]]; then
+              echo "Skipping $name@$version because it already exists on npm."
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            if [[ "$status" != "404" ]]; then
+              echo "::error title=npm registry check failed::Expected HTTP 200 or 404 for $name@$version, got $status."
+              cat /tmp/npm-package-version.json
+              exit 1
+            fi
+
+            echo "Publishing $name@$version."
+            pnpm --dir "$package_dir" publish --access public --provenance --no-git-checks
+            published=$((published + 1))
+          done
+
+          {
+            echo "### npm publish"
+            echo ""
+            echo "| Result | Count |"
+            echo "| --- | --- |"
+            echo "| Published | $published |"
+            echo "| Skipped | $skipped |"
+          } >> "$GITHUB_STEP_SUMMARY"
