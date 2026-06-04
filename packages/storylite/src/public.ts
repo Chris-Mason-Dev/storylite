@@ -1,5 +1,12 @@
 import type { StoryIdResolver, StoryLiteRendererAdapter } from '@storylite/contracts'
 import { defineRenderer } from '@storylite/contracts'
+import type { StorySort } from './lib/storylite/types'
+
+export type {
+  StorySort as StoryLiteStorySort,
+  StorySortOrder as StoryLiteStorySortOrder,
+  StorySortOrderItem as StoryLiteStorySortOrderItem,
+} from './lib/storylite/types'
 
 export type {
   StoryLiteRenderer,
@@ -173,6 +180,7 @@ export type StoryLiteConfig = {
   readonly setup?: string
   readonly renderers?: readonly StoryLiteRendererAdapter[]
   readonly storyId?: StoryIdResolver
+  readonly storySort?: StorySort
   readonly ui?: StoryLiteUiConfig
   readonly managerHtmlAttrs?: StoryLiteAttrsConfig
   readonly managerBodyAttrs?: StoryLiteAttrsConfig

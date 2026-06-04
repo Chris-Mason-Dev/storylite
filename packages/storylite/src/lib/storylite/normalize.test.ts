@@ -4,8 +4,10 @@ import {
   inferControlType,
   normalizeStoryModule,
   normalizeStoryModulesWithDiagnostics,
+  sortStoryTree,
   storyId,
 } from './normalize'
+import type { StoryTreeItem } from './types'
 
 describe('normalizeStoryModule', () => {
   it('merges meta and story args and picks html by default', () => {
@@ -157,6 +159,101 @@ describe('groupStories', () => {
         stories,
         storyCount: 2,
       },
+    ])
+  })
+})
+
+describe('sortStoryTree', () => {
+  const story = (title: string, exportName = 'Default', name = exportName) =>
+    normalizeStoryModule(`../demo/${title.replaceAll('/', '-').toLowerCase()}.stories.ts`, {
+      default: { title },
+      [exportName]: { name, render: () => `<p>${title}</p>` },
+    })
+
+  const layout = (items: readonly StoryTreeItem[]) =>
+    items.map((item) =>
+      item.kind === 'group'
+        ? { title: item.title, components: item.components.map((component) => component.title) }
+        : { title: item.title, stories: item.stories.map((entry) => entry.name) },
+    )
+
+  it('returns the original tree when no order is configured', () => {
+    const tree = groupStories(story('Components/Button'))
+    expect(sortStoryTree(tree)).toBe(tree)
+    expect(sortStoryTree(tree, null)).toBe(tree)
+    expect(sortStoryTree(tree, { order: [] })).toBe(tree)
+  })
+
+  it('orders top-level items and pushes unlisted ones to the end in original order', () => {
+    const tree = groupStories([
+      ...story('Patterns/Card'),
+      ...story('Components/Button'),
+      ...story('Foundations/Colors'),
+      ...story('Pages/Home'),
+    ])
+
+    const sorted = sortStoryTree(tree, { order: ['Foundations', 'Components'] })
+
+    expect(layout(sorted).map((item) => item.title)).toEqual([
+      'Foundations',
+      'Components',
+      'Patterns',
+      'Pages',
+    ])
+  })
+
+  it('orders components within a group via a nested array', () => {
+    const tree = groupStories([
+      ...story('Foundations/Spacing'),
+      ...story('Foundations/Colors'),
+      ...story('Foundations/Typography'),
+    ])
+
+    const sorted = sortStoryTree(tree, {
+      order: ['Foundations', ['Colors', 'Typography', 'Spacing']],
+    })
+
+    expect(layout(sorted)).toEqual([
+      { title: 'Foundations', components: ['Colors', 'Typography', 'Spacing'] },
+    ])
+  })
+
+  it('honors a wildcard for unlisted items', () => {
+    const tree = groupStories([
+      ...story('Beta/One'),
+      ...story('Intro/One'),
+      ...story('Alpha/One'),
+      ...story('WIP/One'),
+    ])
+
+    const sorted = sortStoryTree(tree, { order: ['Intro', '*', 'WIP'] })
+
+    expect(layout(sorted).map((item) => item.title)).toEqual(['Intro', 'Beta', 'Alpha', 'WIP'])
+  })
+
+  it('orders stories inside a component via a deeper nested array', () => {
+    const tree = groupStories(
+      normalizeStoryModule('../demo/button.stories.ts', {
+        default: { title: 'Components/Button' },
+        Ghost: { name: 'Ghost', render: () => '<button>Ghost</button>' },
+        Primary: { name: 'Primary', render: () => '<button>Primary</button>' },
+        Secondary: { name: 'Secondary', render: () => '<button>Secondary</button>' },
+      }),
+    )
+
+    const sorted = sortStoryTree(tree, {
+      order: ['Components', ['Button', ['Primary', 'Secondary', 'Ghost']]],
+    })
+
+    expect(layout(sorted)).toEqual([{ title: 'Components', components: ['Button'] }])
+    const group = sorted[0]
+    if (group?.kind !== 'group') {
+      throw new Error('expected a group')
+    }
+    expect(group.components[0]?.stories.map((entry) => entry.name)).toEqual([
+      'Primary',
+      'Secondary',
+      'Ghost',
     ])
   })
 })

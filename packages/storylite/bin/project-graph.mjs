@@ -100,6 +100,7 @@ export async function loadManifest(root, server = null) {
     storyIdResolver,
     storyIdResolverSource: storyIdResolver ? storyIdResolver.toString() : null,
     home,
+    storySort: config.storySort ?? null,
     ui: customization.projectUi,
     manager: customization.manager,
     preview: customization.preview,
@@ -219,6 +220,7 @@ export const rendererClientLoaders = {
 ${rendererClientLoaders}
 };
 export const projectUi = ${JSON.stringify(manifest.ui)};
+export const storySort = ${JSON.stringify(manifest.storySort ?? null)};
 export const previewHtml = ${JSON.stringify(manifest.preview)};
 export const managerHtml = ${JSON.stringify(manifest.manager)};
 export const home = ${JSON.stringify(manifest.home)};

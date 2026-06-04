@@ -4,7 +4,7 @@
   import ProjectErrors from './lib/components/ProjectErrors.svelte'
   import StorySidebar from './lib/components/StorySidebar.svelte'
   import type { Route } from './lib/storylite/app-types'
-  import { groupStories } from './lib/storylite/normalize'
+  import { groupStories, sortStoryTree } from './lib/storylite/normalize'
   import {
     applyAppTheme,
     hydrateStoryLiteSettings,
@@ -25,6 +25,7 @@
     staticStoriesBase,
     stories,
     storyIdCollisions,
+    storySort,
   } from './story-modules'
 
   const viewports = projectUi.viewports
@@ -54,14 +55,17 @@
   )
   const normalizedQuery = $derived(searchQuery.trim().toLowerCase())
   const groups = $derived(
-    groupStories(
-      normalizedQuery
-        ? stories.filter((story) =>
-            `${story.title} ${story.name} ${story.renderer}`
-              .toLowerCase()
-              .includes(normalizedQuery),
-          )
-        : stories,
+    sortStoryTree(
+      groupStories(
+        normalizedQuery
+          ? stories.filter((story) =>
+              `${story.title} ${story.name} ${story.renderer}`
+                .toLowerCase()
+                .includes(normalizedQuery),
+            )
+          : stories,
+      ),
+      storySort,
     ),
   )
   const isCanvasRoute = $derived(route.kind === 'canvas')

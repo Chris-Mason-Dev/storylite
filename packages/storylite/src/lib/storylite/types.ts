@@ -55,6 +55,13 @@ export type StoryGroup = {
 
 export type StoryTreeItem = StoryComponentGroup | StoryGroup
 
+export type StorySortOrderItem = string | StorySortOrder
+export type StorySortOrder = readonly StorySortOrderItem[]
+
+export type StorySort = {
+  readonly order?: StorySortOrder
+}
+
 export type StoryIdCollisionEntry = {
   readonly importPath: string
   readonly exportName: string

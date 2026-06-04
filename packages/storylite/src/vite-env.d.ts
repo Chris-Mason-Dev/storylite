@@ -18,6 +18,7 @@ declare module 'virtual:storylite/project' {
     StoryIdResolver,
     StoryLiteClientRendererModule,
     StoryModule,
+    StorySort,
     StorySourceMetadataByImportPath,
   } from './lib/storylite/types'
 
@@ -66,6 +67,7 @@ declare module 'virtual:storylite/project' {
   export const storyIdResolver: StoryIdResolver | undefined
   export const rendererClientLoaders: Record<string, () => Promise<StoryLiteClientRendererModule>>
   export const projectUi: StoryLiteProjectUi
+  export const storySort: StorySort | null
   export const previewHtml: StoryLitePreviewHtml
   export const managerHtml: StoryLiteManagerHtml
   export const home: StoryLiteHome

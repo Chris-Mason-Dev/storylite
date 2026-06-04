@@ -208,10 +208,50 @@ export default defineConfig({
 | `renderers`                  | Optional renderer adapters, such as `react()`, `preact()`, `svelte()`, `vue()`, or `solid()`.                               |
 | `vitePlugins`                | StoryLite-specific Vite plugins. Use this for Tailwind, aliases, and other project transforms.                              |
 | `storyId(path, suggestedId)` | Optional story ID rewrite hook.                                                                                             |
+| `storySort`                  | Custom sidebar ordering. `{ order: [...] }` lists titles to pin to the top; see [Story Sorting](#story-sorting).            |
 
 Story IDs strip the leading `src/` segment by default. For example,
 `src/components/button.stories.ts` becomes `components-button--primary`. Duplicate IDs are shown in
 the dev UI and fail `storylite build`.
+
+### Story Sorting
+
+By default the sidebar follows discovery order (story files sorted by path, then export order within
+each file). Use `storySort` to pin specific entries to the top. It supports a subset of Storybook's
+`storySort` option: the `order` array.
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.ts'],
+  storySort: {
+    order: [
+      'Introduction',
+      'Foundations',
+      ['Colors', 'Typography', 'Spacing'],
+      'Components',
+      ['Button', 'Input', 'Select', 'Dialog', 'Popover'],
+      'Patterns',
+      'Pages',
+    ],
+  },
+})
+```
+
+How `order` is matched against the sidebar tree:
+
+- Each string targets an entry at the current level by its title segment — a top-level group, a
+  root-level component, or (when nested) a component within a group.
+- An array immediately after a string orders that entry's children. After a group it orders the
+  group's components; after a component it orders that component's stories. Nesting can go deeper to
+  reach stories inside grouped components.
+- Entries not listed in `order` keep their discovery order and appear after the listed ones. Add
+  `'*'` to mark where unlisted entries should go instead.
+
+For example, `order: ['Pages', '*', 'WIP']` shows `Pages` first, then everything not named in the
+list, then `WIP` last. Only `order` is supported; the `method`, `includeNames`, and `locales`
+options are not.
 
 ## Public Assets
 

@@ -12,6 +12,8 @@ import type {
   StoryModuleSourceMetadata,
   StoryModule,
   StoryNormalizationResult,
+  StorySort,
+  StorySortOrder,
   StorySourceMetadataByImportPath,
   StoryParameters,
   StoryTreeItem,
@@ -167,6 +169,101 @@ export function groupStories(stories: readonly StoryLiteStory[]): readonly Story
       ? finalizeComponentGroup(item.component)
       : finalizeStoryGroup(item.group),
   )
+}
+
+type ParsedSortEntry = {
+  name: string
+  children?: StorySortOrder
+}
+
+function parseStorySortOrder(order: StorySortOrder): {
+  entries: ParsedSortEntry[]
+  fallback: number
+} {
+  const entries: ParsedSortEntry[] = []
+
+  for (const item of order) {
+    if (typeof item === 'string') {
+      entries.push({ name: item })
+    } else if (Array.isArray(item) && entries.length > 0) {
+      entries[entries.length - 1].children = item
+    }
+  }
+
+  const wildcardIndex = entries.findIndex((entry) => entry.name === '*')
+  return { entries, fallback: wildcardIndex === -1 ? entries.length : wildcardIndex }
+}
+
+function sortByStorySortOrder<T>(
+  nodes: readonly T[],
+  getName: (node: T) => string,
+  order: StorySortOrder | undefined,
+): { node: T; children?: StorySortOrder }[] {
+  if (!Array.isArray(order) || order.length === 0) {
+    return nodes.map((node) => ({ node }))
+  }
+
+  const { entries, fallback } = parseStorySortOrder(order)
+  const positionOf = (name: string): number => {
+    const index = entries.findIndex((entry) => entry.name === name)
+    return index === -1 ? fallback : index
+  }
+
+  return nodes
+    .map((node, index) => ({ node, index, position: positionOf(getName(node)) }))
+    .sort((a, b) => a.position - b.position || a.index - b.index)
+    .map(({ node }) => ({
+      node,
+      children: entries.find((entry) => entry.name === getName(node))?.children,
+    }))
+}
+
+export function sortStoryTree(
+  items: readonly StoryTreeItem[],
+  storySort?: StorySort | null,
+): readonly StoryTreeItem[] {
+  const order = storySort?.order
+  if (!Array.isArray(order) || order.length === 0) {
+    return items
+  }
+
+  return sortByStorySortOrder(items, (item) => item.title, order).map(({ node, children }) =>
+    sortTreeItemChildren(node, children),
+  )
+}
+
+function sortTreeItemChildren(
+  item: StoryTreeItem,
+  childOrder: StorySortOrder | undefined,
+): StoryTreeItem {
+  if (item.kind === 'group') {
+    return {
+      ...item,
+      components: sortByStorySortOrder(
+        item.components,
+        (component) => component.title,
+        childOrder,
+      ).map(({ node, children }) => sortComponentStories(node, children)),
+    }
+  }
+
+  return sortComponentStories(item, childOrder)
+}
+
+function sortComponentStories(
+  component: StoryComponentGroup,
+  storyOrder: StorySortOrder | undefined,
+): StoryComponentGroup {
+  if (!Array.isArray(storyOrder) || storyOrder.length === 0) {
+    return component
+  }
+
+  return {
+    ...component,
+    stories: sortByStorySortOrder(component.stories, (story) => story.name, storyOrder).map(
+      ({ node }) => node,
+    ),
+  }
 }
 
 export function storyId(

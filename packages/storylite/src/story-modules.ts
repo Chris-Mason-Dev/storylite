@@ -11,6 +11,7 @@ import {
   staticStoriesBase,
   storyIdResolver,
   storyModuleExportNames,
+  storySort,
   storySourceMetadata,
   storyModules,
 } from 'virtual:storylite/project'
@@ -35,4 +36,5 @@ export {
   rendererClientLoaders,
   setupPreview,
   staticStoriesBase,
+  storySort,
 }

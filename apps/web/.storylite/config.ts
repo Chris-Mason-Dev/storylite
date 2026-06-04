@@ -9,6 +9,18 @@ export default defineConfig({
   home: homeMarkdown,
   publicDir: './public',
   storyId: (_path, suggestedId) => suggestedId.replace(/^components-/, ''),
+  storySort: {
+    order: [
+      'Examples',
+      [
+        'Pure CSS',
+        ['Layout', 'Button', 'Card', 'Field', 'Badge'],
+        'Web Components',
+        'Single Named Export',
+        'Single Default Story',
+      ],
+    ],
+  },
   ui: {
     menuLinks: (defaultLinks) => [
       {
