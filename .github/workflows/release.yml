@@ -75,6 +75,7 @@ jobs:
         with:
           ref: ${{ steps.release.outputs.target-ref }}
           fetch-depth: 0
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
           persist-credentials: true
           show-progress: false
 
