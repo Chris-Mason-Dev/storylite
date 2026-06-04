@@ -11,11 +11,14 @@ import { isBareImportSpecifier, isRecord } from '../src/lib/storylite/utils.js'
 
 export const virtualProjectId = 'virtual:storylite/project'
 export const resolvedVirtualProjectId = `\0${virtualProjectId}`
+export const virtualImportedCssId = 'virtual:storylite/imported-css'
+export const resolvedVirtualImportedCssId = `\0${virtualImportedCssId}`
 export const projectModulePath = '/project.js'
 
 const defaultConfig = { stories: ['./src/**/*.stories.{ts,tsx,js,jsx}'], css: [] }
 const builtinRenderers = new Set(['html', 'web-components'])
 const reservedExports = new Set(['default', '__esModule'])
+const cssFileRE = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/
 const conventionFileNames = [
   'manager-head.html',
   'manager-body-start.html',
@@ -146,6 +149,14 @@ export async function resolveStoryliteProjectPlugins(
 
 export function generateProjectModuleCode(manifest, options = {}) {
   const useStaticStoryMetadata = options.includeStoryModules === 'metadata'
+  const includeImportedCssRuntime =
+    options.includeImportedCssRuntime ??
+    Boolean(
+      options.serveManager && options.includeStoryModules !== false && !useStaticStoryMetadata,
+    )
+  const importedCssRuntimeImport = includeImportedCssRuntime
+    ? `import { storyliteImportedCss } from ${JSON.stringify(virtualImportedCssId)};`
+    : ''
   const storyImports =
     options.includeStoryModules === false
       ? ''
@@ -189,7 +200,8 @@ export function generateProjectModuleCode(manifest, options = {}) {
   const storySourceMetadata = JSON.stringify(manifest.storySourceMetadataByFile ?? {})
   const isStaticBuild = options.isStaticBuild ?? !options.serveManager
 
-  return `${storyImports}
+  return `${importedCssRuntimeImport}
+${storyImports}
 ${cssImports}
 ${setupImport}
 
@@ -200,6 +212,7 @@ ${storyMap}
 export const storyModuleExportNames = ${storyModuleExportNames};
 export const storySourceMetadata = ${storySourceMetadata};
 export const globalCss = [${cssList}];
+export const importedCss = ${includeImportedCssRuntime ? 'storyliteImportedCss.toArray()' : '[]'};
 export const setupPreview = importedSetupPreview;
 export const storyIdResolver = ${formatFunctionExport(manifest.storyIdResolverSource)};
 export const rendererClientLoaders = {
@@ -528,7 +541,7 @@ function isProjectFile(root, file) {
     normalized.startsWith('.storylite/') ||
     normalized.includes('.stories.') ||
     normalized.endsWith('.md') ||
-    normalized.endsWith('.css') ||
+    cssFileRE.test(normalized) ||
     normalized.endsWith('.html') ||
     normalized.endsWith('.tsx') ||
     normalized.endsWith('.ts')

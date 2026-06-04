@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { createServer } from 'vite'
 import { describe, expect, it } from 'vitest'
 import {
+  createProjectGraph,
   extractStoryExportNames,
   extractStorySourceMetadata,
   generateProjectModuleCode,
@@ -12,9 +13,19 @@ import {
   resolvePublicDir,
   resolveStoryliteProjectPlugins,
   storyPagePath,
+  virtualImportedCssId,
 } from '../../../bin/project-graph.mjs'
 
 describe('storylite project graph', () => {
+  it('treats css preprocessor files as project files for reloads', () => {
+    const graph = createProjectGraph('/project')
+
+    expect(graph.isProjectFile('/project/src/button.css')).toBe(true)
+    expect(graph.isProjectFile('/project/src/button.scss')).toBe(true)
+    expect(graph.isProjectFile('/project/src/button.less')).toBe(true)
+    expect(graph.isProjectFile('/project/src/button.styl')).toBe(true)
+  })
+
   it('extracts story export names in source order', async () => {
     expect(
       await extractStoryExportNames(
@@ -446,6 +457,31 @@ export const Card = {}`,
       await server.close()
       await rm(root, { force: true, recursive: true })
     }
+  })
+
+  it('imports the css runtime before story modules in dev mode', () => {
+    const manifest = {
+      projectRoot: '/project',
+      storyFiles: ['/project/src/button.stories.ts'],
+      cssFiles: [],
+      publicDir: false,
+      setupFile: null,
+      rendererAdapters: [],
+      storyExportNamesByFile: {},
+      storySourceMetadataByFile: {},
+      storyIdResolverSource: null,
+      ui: {},
+      preview: {},
+      manager: {},
+      home: null,
+    }
+    const moduleCode = generateProjectModuleCode(manifest, { serveManager: true })
+    const cssRuntimeImport = `import { storyliteImportedCss } from ${JSON.stringify(virtualImportedCssId)};`
+    const storyImport = 'import * as storyModule0 from "/@fs/project/src/button.stories.ts";'
+
+    expect(moduleCode.indexOf(cssRuntimeImport)).toBeGreaterThanOrEqual(0)
+    expect(moduleCode.indexOf(cssRuntimeImport)).toBeLessThan(moduleCode.indexOf(storyImport))
+    expect(moduleCode).toContain('export const importedCss = storyliteImportedCss.toArray();')
   })
 
   it('rejects renderer adapters that override built-in renderers', async () => {
