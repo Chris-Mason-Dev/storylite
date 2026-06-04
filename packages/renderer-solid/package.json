@@ -1,6 +1,6 @@
 {
   "name": "@storylite/renderer-solid",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Solid.js renderer for StoryLite",
   "homepage": "https://itsjavi.com/storylite",
   "bugs": {
