@@ -474,6 +474,60 @@ export const ReadyState = {
 } satisfies StoryLiteStoryDefinition<{ label: string }>
 ```
 
+### Markdown Documentation Stories
+
+StoryLite stories can render Markdown files when your StoryLite Vite pipeline transforms Markdown
+imports into HTML strings. The example below uses Satteri through `vite-plugin-satteri`, but any Vite
+plugin works as long as importing a Markdown file returns plain HTML that an HTML story can render.
+
+Configure the Markdown plugin in `.storylite/config.ts`:
+
+```ts
+import { defineConfig } from '@storylite/storylite'
+import satteri from 'vite-plugin-satteri'
+
+export default defineConfig({
+  stories: ['./src/**/*.stories.ts'],
+  vitePlugins: [
+    satteri({
+      mdx: false,
+      features: {
+        frontmatter: true,
+        gfm: true,
+      },
+    }),
+  ],
+})
+```
+
+Add a TypeScript declaration for Markdown imports. Adjust the exported names if your chosen plugin
+uses a different module shape:
+
+```ts
+declare module '*.md' {
+  const html: string
+  const frontmatter: Record<string, unknown>
+  export default html
+  export { html, frontmatter }
+}
+```
+
+Keep larger documentation in a sibling Markdown file, such as `button.stories.md`, then render the
+imported HTML from a documentation story:
+
+```ts
+import type { StoryLiteStoryDefinition } from '@storylite/storylite'
+import buttonDocsHtml from './button.stories.md'
+
+export const Documentation = {
+  render: () => `<main class="ui-demo-page">${buttonDocsHtml}</main>`,
+} satisfies StoryLiteStoryDefinition
+```
+
+Use Markdown stories for longer guidance, anatomy notes, accessibility notes, usage tables, and
+examples that are easier to maintain as prose. Keep the component's interactive `Default` story
+focused on API examples and controls.
+
 ### Default Export
 
 | Field        | Description                                             |
